@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: smart-exam-seating
+    env: java
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/smart-exam-seating-1.0.0.jar
+    plan: free
+    healthCheckPath: /login
