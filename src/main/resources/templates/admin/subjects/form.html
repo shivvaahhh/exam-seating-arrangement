@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isEdit ? 'Edit Subject' : 'Add Subject'})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('subjects')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar(${isEdit ? 'Edit Subject' : 'Add Subject'})}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/subjects}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Subjects
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 650px;">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold" th:text="${isEdit ? 'Update Subject Details' : 'Register New Subject'}">Form Title</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/subjects/save}" th:object="${subject}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="subjectCode" class="form-label fw-semibold">Subject Code <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{subjectCode}" th:classappend="${#fields.hasErrors('subjectCode') ? 'is-invalid' : ''}" placeholder="e.g. CS601" style="text-transform: uppercase;" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('subjectCode')}" th:errors="*{subjectCode}">Code Error</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="credits" class="form-label fw-semibold">Credits <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" th:field="*{credits}" min="1" max="10" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="subjectName" class="form-label fw-semibold">Subject Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{subjectName}" th:classappend="${#fields.hasErrors('subjectName') ? 'is-invalid' : ''}" placeholder="e.g. Database Management Systems" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('subjectName')}" th:errors="*{subjectName}">Name Error</div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="departmentId" class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{departmentId}" required>
+                                        <option value="">Select Department</option>
+                                        <option th:each="dept : ${departments}"
+                                                th:value="${dept.id}"
+                                                th:text="${dept.departmentName} + ' (' + ${dept.departmentCode} + ')'">Dept</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="semester" class="form-label fw-semibold">Semester <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{semester}" required>
+                                        <option value="">Select Semester</option>
+                                        <option th:each="sem : ${#numbers.sequence(1, 8)}"
+                                                th:value="${sem}"
+                                                th:text="'Semester ' + ${sem}">Sem</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/subjects}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> <span th:text="${isEdit ? 'Update Subject' : 'Save Subject'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Exam Details - ' + ${examination.examinationName})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('examinations')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Examination Details')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <a th:href="@{/admin/examinations}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Examinations
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/admin/examinations/edit/{id}(id=${examination.id})}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-1"></i> Edit Exam
+                        </a>
+                        <form th:if="${examination.status != 'CANCELLED'}" th:action="@{/admin/examinations/cancel/{id}(id=${examination.id})}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this examination?')">
+                                <i class="bi bi-x-circle me-1"></i> Cancel Exam
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold">Schedule Information</h6>
+                                <span th:if="${examination.status == 'ALLOCATED'}" class="badge bg-success">ALLOCATED</span>
+                                <span th:if="${examination.status == 'SCHEDULED'}" class="badge bg-warning text-dark">SCHEDULED</span>
+                                <span th:if="${examination.status == 'CANCELLED'}" class="badge bg-danger">CANCELLED</span>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="fw-bold text-dark mb-2" th:text="${examination.examinationName}">Exam Name</h4>
+                                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fs-6 mb-3"
+                                     th:text="${examination.subjectCode} + ' - ' + ${examination.subjectName}">Subject</div>
+
+                                <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Department:</span>
+                                        <strong th:text="${examination.departmentName}">CSE</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Semester:</span>
+                                        <strong th:text="'Semester ' + ${examination.semester}">Sem 6</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Date of Examination:</span>
+                                        <strong th:text="${examination.examinationDate}">2026-10-22</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Examination Hours:</span>
+                                        <strong th:text="${examination.startTime} + ' to ' + ${examination.endTime} + ' (' + ${examination.session} + ')'">09:30 - 12:30</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Academic Year:</span>
+                                        <strong th:text="${examination.academicYear}">2026-2027</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="m-0 fw-bold">Seating Workflow & Operations</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3 mb-4">
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded-3 text-center border">
+                                            <div class="text-muted small fw-semibold">ELIGIBLE CANDIDATES</div>
+                                            <h2 class="fw-bold text-primary my-1" th:text="${examination.eligibleStudentCount}">0</h2>
+                                            <small class="text-muted">Registered</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light rounded-3 text-center border">
+                                            <div class="text-muted small fw-semibold">SEATS ALLOCATED</div>
+                                            <h2 class="fw-bold text-success my-1" th:text="${examination.allocatedStudentCount}">0</h2>
+                                            <small class="text-muted">Confirmed</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <a th:href="@{/admin/examinations/{id}/eligibility(id=${examination.id})}" class="btn btn-outline-primary py-2 text-start">
+                                        <i class="bi bi-person-check-fill me-2 fs-5 text-primary align-middle"></i>
+                                        <strong>Manage Eligible Students</strong>
+                                        <div class="small text-muted ms-4">Add or remove enrolled candidates for this examination</div>
+                                    </a>
+
+                                    <a th:if="${examination.status != 'CANCELLED'}" th:href="@{/admin/allocations/generate(examId=${examination.id})}" class="btn btn-primary py-2 text-start">
+                                        <i class="bi bi-cpu-fill me-2 fs-5 text-warning align-middle"></i>
+                                        <strong>Automatic Seating Allocation Engine</strong>
+                                        <div class="small text-white-50 ms-4">Assign candidates to examination halls & seat positions</div>
+                                    </a>
+
+                                    <a th:if="${examination.status == 'ALLOCATED'}" th:href="@{/admin/allocations/results/{id}(id=${examination.id})}" class="btn btn-outline-success py-2 text-start">
+                                        <i class="bi bi-table me-2 fs-5 text-success align-middle"></i>
+                                        <strong>View Seating Results & Chart</strong>
+                                        <div class="small text-muted ms-4">Browse hall-wise allocations and 2D visual layouts</div>
+                                    </a>
+
+                                    <a th:if="${examination.status == 'ALLOCATED'}" th:href="@{/admin/reports/attendance/{id}(id=${examination.id})}" class="btn btn-outline-secondary py-2 text-start">
+                                        <i class="bi bi-printer me-2 fs-5 text-secondary align-middle"></i>
+                                        <strong>Print Attendance Sheet</strong>
+                                        <div class="small text-muted ms-4">Generate invigilator sign-off sheet for this exam</div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

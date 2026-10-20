@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isEdit ? 'Edit Student' : 'Add Student'})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('students')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar(${isEdit ? 'Edit Student' : 'Add Student'})}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/students}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Student Directory
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 750px;">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold" th:text="${isEdit ? 'Update Student Information' : 'Register New Student'}">Form Title</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/students/save}" th:object="${student}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="registerNumber" class="form-label fw-semibold">Register Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{registerNumber}" th:classappend="${#fields.hasErrors('registerNumber') ? 'is-invalid' : ''}" placeholder="e.g. 2024CSE101" style="text-transform: uppercase;" required>
+                                    <small class="text-muted">Unique roll/hall ticket number.</small>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('registerNumber')}" th:errors="*{registerNumber}">Reg No Error</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="fullName" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{fullName}" th:classappend="${#fields.hasErrors('fullName') ? 'is-invalid' : ''}" placeholder="e.g. John Doe" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">Name Error</div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" th:field="*{email}" th:classappend="${#fields.hasErrors('email') ? 'is-invalid' : ''}" placeholder="student@college.edu" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email Error</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="phoneNumber" class="form-label fw-semibold">Phone Number</label>
+                                    <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="e.g. 9876543210">
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="departmentId" class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{departmentId}" required>
+                                        <option value="">Select Department</option>
+                                        <option th:each="dept : ${departments}"
+                                                th:value="${dept.id}"
+                                                th:text="${dept.departmentName} + ' (' + ${dept.departmentCode} + ')'">Dept</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="semester" class="form-label fw-semibold">Semester <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{semester}" required>
+                                        <option value="">Select Semester</option>
+                                        <option th:each="sem : ${#numbers.sequence(1, 8)}"
+                                                th:value="${sem}"
+                                                th:text="'Semester ' + ${sem}">Sem</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="academicYear" class="form-label fw-semibold">Academic Year <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{academicYear}" placeholder="e.g. 2026-2027" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label for="password" class="form-label fw-semibold">Portal Password</label>
+                                    <input type="password" class="form-control" th:field="*{password}" placeholder="Leave blank to use default (password123)">
+                                    <small class="text-muted">Password used by the student to check seat allocations.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label fw-semibold">Account Status</label>
+                                    <select class="form-select" th:field="*{status}">
+                                        <option value="ACTIVE">ACTIVE</option>
+                                        <option value="INACTIVE">INACTIVE</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/students}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> <span th:text="${isEdit ? 'Update Student' : 'Save Student'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

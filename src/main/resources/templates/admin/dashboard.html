@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin Dashboard')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/layout :: adminSidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Examination Management Dashboard')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Quick Actions Bar -->
+                <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);">
+                    <div class="card-body p-3 text-white d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-lightning-charge-fill text-warning fs-4"></i>
+                            <div>
+                                <h6 class="m-0 fw-bold">Quick Operations</h6>
+                                <small class="text-white-50">Instant shortcuts for frequent administrative workflows</small>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a th:href="@{/admin/allocations/generate}" class="btn btn-warning fw-semibold btn-sm">
+                                <i class="bi bi-cpu-fill me-1"></i> Generate Seating
+                            </a>
+                            <a th:href="@{/admin/examinations/new}" class="btn btn-light btn-sm fw-semibold">
+                                <i class="bi bi-plus-circle me-1"></i> Schedule Exam
+                            </a>
+                            <a th:href="@{/admin/students/new}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-person-plus me-1"></i> Add Student
+                            </a>
+                            <a th:href="@{/admin/halls/new}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-building-add me-1"></i> Add Hall
+                            </a>
+                            <a th:href="@{/admin/reports}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-file-earmark-text me-1"></i> View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6 Metric Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">TOTAL STUDENTS</div>
+                                    <h3 class="fw-bold my-1 text-dark" th:text="${stats.totalStudents}">0</h3>
+                                    <small class="text-muted">Enrolled</small>
+                                </div>
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">DEPARTMENTS</div>
+                                    <h3 class="fw-bold my-1 text-dark" th:text="${stats.totalDepartments}">0</h3>
+                                    <small class="text-muted">Academic Wings</small>
+                                </div>
+                                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-success">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">EXAM HALLS</div>
+                                    <h3 class="fw-bold my-1 text-dark" th:text="${stats.totalHalls}">0</h3>
+                                    <small class="text-muted">Active venues</small>
+                                </div>
+                                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-building-check"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-warning">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">UPCOMING EXAMS</div>
+                                    <h3 class="fw-bold my-1 text-dark" th:text="${stats.upcomingExams}">0</h3>
+                                    <small class="text-muted">Scheduled</small>
+                                </div>
+                                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                                    <i class="bi bi-calendar2-week-fill"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-indigo" style="border-left-color: #6366f1 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">ALLOCATED</div>
+                                    <h3 class="fw-bold my-1 text-success" th:text="${stats.totalAllocatedStudents}">0</h3>
+                                    <small class="text-muted">With Seats</small>
+                                </div>
+                                <div class="stat-icon text-success" style="background-color: #ecfdf5;">
+                                    <i class="bi bi-check2-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-2">
+                        <div class="stat-card p-3 border-start border-4 border-danger">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small fw-semibold">PENDING SEAT</div>
+                                    <h3 class="fw-bold my-1 text-danger" th:text="${stats.studentsNotYetAllocated}">0</h3>
+                                    <small class="text-muted">Unallocated</small>
+                                </div>
+                                <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Activity Row -->
+                <div class="row g-4 mb-4">
+                    <!-- Department Distribution Chart -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-pie-chart-fill text-primary me-2"></i>Department-wise Student Statistics</span>
+                                <span class="badge bg-light text-muted border">Live Database</span>
+                            </div>
+                            <div class="card-body d-flex align-items-center justify-content-center p-3">
+                                <div style="max-height: 280px; width: 100%;" class="d-flex justify-content-center">
+                                    <canvas id="deptChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Exams Card -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-calendar-check text-primary me-2"></i>Upcoming Examinations</span>
+                                <a th:href="@{/admin/examinations}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div th:if="${#lists.isEmpty(upcomingExams)}" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 text-muted d-block mb-2"></i>
+                                    No upcoming examinations found.
+                                    <div class="mt-2">
+                                        <a th:href="@{/admin/examinations/new}" class="btn btn-sm btn-primary">Schedule Now</a>
+                                    </div>
+                                </div>
+                                <div th:if="${not #lists.isEmpty(upcomingExams)}" class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Examination</th>
+                                                <th>Date & Time</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="exam : ${upcomingExams}">
+                                                <td>
+                                                    <div class="fw-semibold text-dark" th:text="${exam.examinationName}">Exam Name</div>
+                                                    <small class="text-muted" th:text="${exam.subjectCode} + ' • ' + ${exam.departmentName}">CS601 • CSE</small>
+                                                </td>
+                                                <td>
+                                                    <div th:text="${exam.examinationDate}">2026-10-22</div>
+                                                    <small class="text-muted" th:text="${exam.startTime} + ' (' + ${exam.session} + ')'">09:30</small>
+                                                </td>
+                                                <td>
+                                                    <span th:if="${exam.status == 'ALLOCATED'}" class="badge bg-success">Allocated</span>
+                                                    <span th:if="${exam.status == 'SCHEDULED'}" class="badge bg-warning text-dark">Scheduled</span>
+                                                    <span th:if="${exam.status == 'CANCELLED'}" class="badge bg-danger">Cancelled</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <a th:if="${exam.status != 'ALLOCATED'}" th:href="@{/admin/allocations/generate(examId=${exam.id})}" class="btn btn-sm btn-outline-primary" title="Generate Seats">
+                                                        <i class="bi bi-cpu"></i>
+                                                    </a>
+                                                    <a th:if="${exam.status == 'ALLOCATED'}" th:href="@{/admin/allocations/results/{id}(id=${exam.id})}" class="btn btn-sm btn-outline-success" title="View Results">
+                                                        <i class="bi bi-check2-circle"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Seating Allocations Table -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-table text-primary me-2"></i>Recent Seating Arrangements</span>
+                        <a th:href="@{/admin/allocations}" class="btn btn-sm btn-link text-decoration-none">All Allocations</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:if="${#lists.isEmpty(recentAllocations)}" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No seating arrangements have been generated yet.
+                            <div class="mt-2">
+                                <a th:href="@{/admin/allocations/generate}" class="btn btn-sm btn-primary">Run Allocation Engine</a>
+                            </div>
+                        </div>
+                        <div th:if="${not #lists.isEmpty(recentAllocations)}" class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Examination</th>
+                                        <th>Date & Session</th>
+                                        <th>Eligible Students</th>
+                                        <th>Allocated Students</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="alloc : ${recentAllocations}">
+                                        <td>
+                                            <div class="fw-semibold text-dark" th:text="${alloc.examinationName}">Exam Name</div>
+                                            <small class="text-muted" th:text="${alloc.subjectName} + ' (' + ${alloc.subjectCode} + ')'">DBMS</small>
+                                        </td>
+                                        <td>
+                                            <div th:text="${alloc.examinationDate}">2026-10-22</div>
+                                            <small class="text-muted" th:text="${alloc.session}">FORENOON</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1" th:text="${alloc.eligibleStudentCount} + ' Candidates'">0</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"
+                                                  th:text="${alloc.allocatedStudentCount} + ' Allocated'">0</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">CONFIRMED</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a th:href="@{/admin/allocations/results/{id}(id=${alloc.id})}" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye me-1"></i> Seating View
+                                            </a>
+                                            <a th:href="@{/admin/reports/attendance/{id}(id=${alloc.id})}" class="btn btn-sm btn-outline-secondary" title="Attendance Sheet">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<!-- Chart.js Department breakdown script -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const deptDistribution = /*[[${stats.departmentStudentDistribution}]]*/ {};
+    const labels = Object.keys(deptDistribution);
+    const dataValues = Object.values(deptDistribution);
+
+    if (labels.length > 0) {
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: [
+                        '#2563eb',
+                        '#0d9488',
+                        '#f59e0b',
+                        '#ec4899',
+                        '#8b5cf6',
+                        '#06b6d4'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { size: 12 },
+                            padding: 14
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById('deptChart').parentElement.innerHTML =
+            '<div class="text-center py-4 text-muted">No student department records to chart.</div>';
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

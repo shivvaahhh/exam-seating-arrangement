@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Generate Seating Arrangement')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('allocations')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Generate Seating Arrangement')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Insufficient Capacity Alert Box -->
+                <div th:if="${capacityErrorMessage}" class="alert alert-danger shadow-sm border-2 border-danger p-4 mb-4" role="alert">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-shield-x fs-1 text-danger"></i>
+                        <div>
+                            <h5 class="fw-bold m-0 text-danger">Capacity Validation Failed</h5>
+                            <p class="m-0 mt-1 fs-6" th:text="${capacityErrorMessage}">Allocation cannot be completed. Eligible students: 150. Available seats: 120. Additional seats required: 30.</p>
+                            <small class="text-muted d-block mt-1">Please select additional active examination halls or increase hall capacity to proceed.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/allocations}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Allocation Hub
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+                    <div class="card-header bg-light d-flex align-items-center gap-2">
+                        <i class="bi bi-cpu text-primary fs-5"></i>
+                        <h6 class="m-0 fw-bold">Automatic Seating Allocation Parameters</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/allocations/generate}" th:object="${allocationRequest}" method="post">
+
+                            <!-- Select Examination -->
+                            <div class="mb-4">
+                                <label for="examinationId" class="form-label fw-semibold">1. Select Target Examination <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" th:field="*{examinationId}" id="examSelect" onchange="updateExamDetails()" required>
+                                    <option value="">-- Choose Examination --</option>
+                                    <option th:each="exam : ${examinations}"
+                                            th:value="${exam.id}"
+                                            th:text="${exam.examinationName} + ' (' + ${exam.eligibleStudentCount} + ' candidates, Status: ' + ${exam.status} + ')'"
+                                            th:data-count="${exam.eligibleStudentCount}"
+                                            th:data-status="${exam.status}"
+                                            th:selected="${selectedExamId != null and selectedExamId == exam.id}">Exam</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('examinationId')}" th:errors="*{examinationId}">Exam Error</div>
+                                <div id="examMeta" class="mt-2 text-muted small"></div>
+                            </div>
+
+                            <!-- Select Examination Halls -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">2. Select Active Examination Halls for this Session <span class="text-danger">*</span></label>
+                                <p class="text-muted small mb-2">Select one or more halls. Seating will be assigned strictly according to row-column positions up to each hall's usable capacity.</p>
+
+                                <div class="table-responsive border rounded-3 p-2 bg-light">
+                                    <table class="table table-sm table-borderless align-middle mb-0">
+                                        <thead>
+                                            <tr class="text-muted small">
+                                                <th style="width: 40px;">Select</th>
+                                                <th>Hall Name & Location</th>
+                                                <th>Dimensions</th>
+                                                <th class="text-end">Usable Capacity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="hall : ${activeHalls}">
+                                                <td>
+                                                    <input class="form-check-input hall-checkbox" type="checkbox"
+                                                           name="hallIds"
+                                                           th:value="${hall.id}"
+                                                           th:data-capacity="${hall.getEffectiveCapacity()}"
+                                                           onchange="recalculateCapacity()"
+                                                           th:id="'hall_' + ${hall.id}">
+                                                </td>
+                                                <td>
+                                                    <label class="form-check-label fw-semibold text-dark" th:for="'hall_' + ${hall.id}" th:text="${hall.hallName}">Hall A</label>
+                                                    <small class="d-block text-muted" th:text="${hall.buildingName} + ' (' + ${hall.roomNumber} + ')'">Academic Block</small>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted" th:text="${hall.numberOfRows} + ' R × ' + ${hall.numberOfColumns} + ' C'">5 × 6</small>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" th:text="${hall.getEffectiveCapacity()} + ' Seats'">30 Seats</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="selectAllHalls(true)">Select All</button>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" onclick="selectAllHalls(false)">Deselect All</button>
+                                    <div class="fw-semibold text-primary">
+                                        Total Selected Seats: <span id="totalSelectedSeats" class="fs-6 fw-bold">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sorting Rule Strategy -->
+                            <div class="mb-4">
+                                <label for="sortStrategy" class="form-label fw-semibold">3. Student Seating Order Strategy</label>
+                                <select class="form-select" th:field="*{sortStrategy}">
+                                    <option value="DEPT_REGNO">Department-wise & Register Number Order (Deterministic standard)</option>
+                                    <option value="REGNO_ONLY">Register Number Ascending Order</option>
+                                </select>
+                                <small class="text-muted">Students are distributed across seats continuously starting from Row A, Column 01.</small>
+                            </div>
+
+                            <!-- Force Regenerate if already allocated -->
+                            <div th:if="${canRegenerate}" class="alert alert-warning p-3 mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" th:field="*{forceRegenerate}" id="forceRegen">
+                                    <label class="form-check-label fw-semibold text-dark" for="forceRegen">
+                                        I understand that confirmed allocations exist and explicitly authorize regenerating and overwriting seats for this examination.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg fw-semibold py-2">
+                                    <i class="bi bi-play-circle-fill me-1"></i> Run Automatic Allocation Engine
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+<script>
+    function recalculateCapacity() {
+        let total = 0;
+        document.querySelectorAll('.hall-checkbox:checked').forEach(cb => {
+            total += parseInt(cb.getAttribute('data-capacity')) || 0;
+        });
+        document.getElementById('totalSelectedSeats').innerText = total;
+    }
+
+    function selectAllHalls(checked) {
+        document.querySelectorAll('.hall-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        recalculateCapacity();
+    }
+
+    function updateExamDetails() {
+        const select = document.getElementById('examSelect');
+        const opt = select.options[select.selectedIndex];
+        if (opt && opt.value) {
+            const count = opt.getAttribute('data-count');
+            const status = opt.getAttribute('data-status');
+            document.getElementById('examMeta').innerHTML = 'Eligible registered candidates: <strong>' + count + '</strong>. Current status: <span class="badge bg-secondary">' + status + '</span>';
+        } else {
+            document.getElementById('examMeta').innerText = '';
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Auto select all active halls by default for convenience
+        selectAllHalls(true);
+        updateExamDetails();
+    });
+</script>
+
+</body>
+</html>

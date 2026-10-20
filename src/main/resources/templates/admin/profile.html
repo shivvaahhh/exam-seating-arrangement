@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin Profile & Settings')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('profile')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Account Settings')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="row g-4 mx-auto" style="max-width: 800px;">
+                    <div class="col-md-5">
+                        <div class="card shadow-sm h-100 text-center p-4">
+                            <div class="d-inline-flex p-3 rounded-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                                <i class="bi bi-shield-lock-fill fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1" th:text="${username}">admin</h5>
+                            <span class="badge bg-primary px-3 py-1 mb-3">ADMINISTRATOR</span>
+                            <p class="text-muted small">
+                                Autonomous Examination Control Account. Holds complete administrative privileges for schedules, students, halls, and seating arrangements.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="m-0 fw-bold"><i class="bi bi-key-fill text-primary me-2"></i>Change Admin Password</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <form th:action="@{/admin/profile/change-password}" method="post">
+                                    <div class="mb-3">
+                                        <label for="currentPassword" class="form-label fw-semibold small">Current Password <span class="text-danger">*</span></label>
+                                        <input type="password" name="currentPassword" class="form-control" placeholder="Enter current password" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="newPassword" class="form-label fw-semibold small">New Password <span class="text-danger">*</span></label>
+                                        <input type="password" name="newPassword" class="form-control" placeholder="Minimum 6 characters" minlength="6" required>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label for="confirmPassword" class="form-label fw-semibold small">Confirm New Password <span class="text-danger">*</span></label>
+                                        <input type="password" name="confirmPassword" class="form-control" placeholder="Re-type new password" minlength="6" required>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-1"></i> Update Security Credentials
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

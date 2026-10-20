@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Hall Details - ' + ${hall.hallName})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('halls')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Hall Layout & Details')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <a th:href="@{/admin/halls}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Halls
+                    </a>
+                    <div>
+                        <a th:href="@{/admin/halls/edit/{id}(id=${hall.id})}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil me-1"></i> Edit Hall
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="m-0 fw-bold">Venue Specifications</h6>
+                            </div>
+                            <div class="card-body">
+                                <h4 class="fw-bold text-primary mb-1" th:text="${hall.hallName}">Hall A</h4>
+                                <p class="text-muted small mb-3" th:text="${hall.description != null ? hall.description : 'Standard examination hall'}">Description</p>
+
+                                <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Building:</span>
+                                        <strong th:text="${hall.buildingName}">Building</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Floor & Room:</span>
+                                        <strong th:text="${hall.floor} + ', ' + ${hall.roomNumber}">Floor</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Status:</span>
+                                        <span th:if="${hall.status == 'ACTIVE'}" class="badge bg-success">ACTIVE</span>
+                                        <span th:if="${hall.status == 'INACTIVE'}" class="badge bg-secondary">INACTIVE</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Configured Capacity:</span>
+                                        <strong th:text="${hall.totalCapacity} + ' Seats'">30</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Grid Dimensions:</span>
+                                        <strong th:text="${hall.numberOfRows} + ' Rows × ' + ${hall.numberOfColumns} + ' Columns'">5 × 6</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Max Physical Capacity:</span>
+                                        <strong th:text="${hall.numberOfRows * hall.numberOfColumns} + ' Seats'">30</strong>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between px-0">
+                                        <span class="text-muted">Effective Usable Capacity:</span>
+                                        <span class="badge bg-primary fs-6" th:text="${T(java.lang.Math).min(hall.totalCapacity, hall.numberOfRows * hall.numberOfColumns)} + ' Seats'">30</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold">Seating Grid Representation</h6>
+                                <span class="badge bg-light text-muted border">Physical Arrangement</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="seat-grid-container text-center">
+                                    <div class="seat-podium">
+                                        <i class="bi bi-display me-2"></i> Invigilator Desk / Blackboard
+                                    </div>
+
+                                    <div class="d-flex flex-column align-items-center">
+                                        <div th:each="r : ${#numbers.sequence(1, hall.numberOfRows)}" class="d-flex justify-content-center mb-1">
+                                            <div th:each="c : ${#numbers.sequence(1, hall.numberOfColumns)}"
+                                                 class="seat-cell seat-empty"
+                                                 th:classappend="${((r - 1) * hall.numberOfColumns + c) > hall.totalCapacity ? 'seat-unavailable' : ''}">
+                                                <span class="small" th:text="${T(com.example.examseating.service.SeatAllocationService).getRowLetter(r)} + '-' + ${#numbers.formatInteger(c, 2)}">A-01</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top">
+                                        <div class="seat-legend-item">
+                                            <div class="seat-legend-box seat-empty"></div> Available Position
+                                        </div>
+                                        <div class="seat-legend-item">
+                                            <div class="seat-legend-box seat-unavailable"></div> Exceeds Capacity Limit
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

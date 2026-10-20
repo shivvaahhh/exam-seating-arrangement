@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Hall Capacity Utilization')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('reports')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Hall Capacity Utilization')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold m-0">Examination Hall Capacity Utilization Report</h5>
+                        <small class="text-muted">Metrics analyzing physical seat configurations, configured exam limits, and live allocations</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button onclick="window.print()" class="btn btn-outline-primary btn-sm no-print">
+                            <i class="bi bi-printer me-1"></i> Print Report
+                        </button>
+                        <a th:href="@{/admin/reports}" class="btn btn-secondary btn-sm no-print">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Reports
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Hall Name & Location</th>
+                                        <th>Status</th>
+                                        <th>Configured Limit</th>
+                                        <th>Physical Seats</th>
+                                        <th>Usable Capacity</th>
+                                        <th>Currently Allocated</th>
+                                        <th style="width: 25%;">Utilization Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="hall : ${report}">
+                                        <td>
+                                            <div class="fw-bold text-dark" th:text="${hall.hallName}">Hall A</div>
+                                            <small class="text-muted" th:text="${hall.buildingName} + ' (' + ${hall.roomNumber} + ')'">Academic Block</small>
+                                        </td>
+                                        <td>
+                                            <span th:if="${hall.status == 'ACTIVE'}" class="badge bg-success">ACTIVE</span>
+                                            <span th:if="${hall.status == 'INACTIVE'}" class="badge bg-secondary">INACTIVE</span>
+                                        </td>
+                                        <td th:text="${hall.totalCapacity} + ' Seats'">30 Seats</td>
+                                        <td th:text="${hall.physicalSeats} + ' Seats'">30 Seats</td>
+                                        <td class="fw-bold text-primary" th:text="${hall.effectiveCapacity} + ' Seats'">30 Seats</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1" th:text="${hall.currentlyAllocatedCount} + ' Students'">0 Students</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="progress flex-grow-1" style="height: 10px;">
+                                                    <div class="progress-bar"
+                                                         th:classappend="${hall.utilizationPercentage > 85 ? 'bg-danger' : (hall.utilizationPercentage > 50 ? 'bg-primary' : 'bg-info')}"
+                                                         role="progressbar"
+                                                         th:style="'width: ' + ${hall.utilizationPercentage} + '%'"></div>
+                                                </div>
+                                                <small class="fw-bold text-muted" th:text="${hall.utilizationPercentage} + '%'">0%</small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

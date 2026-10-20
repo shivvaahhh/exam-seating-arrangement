@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Examination Seat Pass')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Student Sidebar -->
+        <div th:replace="~{fragments/layout :: studentSidebar('find-seat')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Examination Seat Pass')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center no-print">
+                    <a th:href="@{/student/find-seat}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Find My Seat
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary btn-sm">
+                        <i class="bi bi-printer-fill me-1"></i> Print Hall Pass
+                    </button>
+                </div>
+
+                <div th:if="${allocation == null}" class="card shadow-sm text-center py-5">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-circle text-warning fs-1 d-block mb-2"></i>
+                        <h5>No Seat Allocated Yet</h5>
+                        <p class="text-muted">No seating record exists for this examination.</p>
+                        <a th:href="@{/student/find-seat}" class="btn btn-primary btn-sm">Return</a>
+                    </div>
+                </div>
+
+                <!-- Official Seat Pass Card -->
+                <div th:if="${allocation != null}" class="card shadow-sm mx-auto border-2 border-primary" style="max-width: 650px; border-radius: 12px; overflow: hidden;">
+                    <!-- Institutional Header -->
+                    <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #0f2b5c 0%, #1e3a8a 100%);">
+                        <div class="small text-white-50 text-uppercase tracking-wider" th:text="${institutionName}">GOVERNMENT ENGINEERING COLLEGE</div>
+                        <h4 class="fw-bold my-1">OFFICIAL EXAMINATION SEAT PASS</h4>
+                        <span class="badge bg-warning text-dark px-3 py-1 fw-bold">AUTONOMOUS EXAMINATION CELL</span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <span class="text-muted small fw-semibold">ASSIGNED SEAT NUMBER</span>
+                            <div class="display-2 fw-bold text-primary my-1" th:text="${allocation.seatNumber}">A-01</div>
+                            <div class="badge bg-light text-dark border fs-6 px-3 py-1">
+                                Row <span th:text="${allocation.rowNumber}">1</span> (<span th:text="${T(com.example.examseating.service.SeatAllocationService).getRowLetter(allocation.rowNumber)}">A</span>) &bull;
+                                Column <span th:text="${allocation.columnNumber}">1</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="row g-2 small">
+                                <div class="col-6">
+                                    <span class="text-muted d-block">CANDIDATE NAME:</span>
+                                    <strong class="text-dark" th:text="${student.fullName}">John Doe</strong>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted d-block">REGISTER NUMBER:</span>
+                                    <strong class="text-dark" th:text="${student.registerNumber}">2024CSE001</strong>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted d-block">DEPARTMENT / SEM:</span>
+                                    <span th:text="${student.department.departmentName} + ' / Sem ' + ${student.semester}">CSE / Sem 6</span>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted d-block">ACADEMIC YEAR:</span>
+                                    <span th:text="${student.academicYear}">2026-2027</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 border mb-4">
+                            <div class="row g-2 small">
+                                <div class="col-12 mb-1">
+                                    <span class="text-muted d-block">EXAMINATION & SUBJECT:</span>
+                                    <strong class="text-dark" th:text="${allocation.examination.examinationName}">Database Systems Final</strong>
+                                    <div class="text-primary" th:text="${allocation.examination.subject.subjectCode} + ' - ' + ${allocation.examination.subject.subjectName}">CS601</div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted d-block">HALL / VENUE:</span>
+                                    <strong class="text-dark" th:text="${allocation.examinationHall.hallName}">Hall A</strong>
+                                    <div class="text-muted" th:text="${allocation.examinationHall.buildingName} + ' (' + ${allocation.examinationHall.roomNumber} + ')'">Academic Block</div>
+                                </div>
+                                <div class="col-6 mt-2">
+                                    <span class="text-muted d-block">DATE & TIME:</span>
+                                    <strong class="text-dark" th:text="${allocation.examination.examinationDate}">2026-10-22</strong>
+                                    <div class="text-muted" th:text="${allocation.examination.startTime} + ' - ' + ${allocation.examination.endTime} + ' (' + ${allocation.examination.session} + ')'">09:30 - 12:30</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-top pt-3 text-center text-muted small">
+                            Candidate must present this seat pass along with official College ID Card at the examination hall entrance.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

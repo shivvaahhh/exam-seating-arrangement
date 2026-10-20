@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isEdit ? 'Edit Department' : 'Add Department'})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('departments')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar(${isEdit ? 'Edit Department' : 'Add Department'})}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/departments}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Departments
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 650px;">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold" th:text="${isEdit ? 'Update Department Details' : 'Register New Department'}">Form Title</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/departments/save}" th:object="${department}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div class="mb-3">
+                                <label for="departmentName" class="form-label fw-semibold">Department Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{departmentName}" th:classappend="${#fields.hasErrors('departmentName') ? 'is-invalid' : ''}" placeholder="e.g. Computer Science & Engineering" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('departmentName')}" th:errors="*{departmentName}">Name Error</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="departmentCode" class="form-label fw-semibold">Department Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{departmentCode}" th:classappend="${#fields.hasErrors('departmentCode') ? 'is-invalid' : ''}" placeholder="e.g. CSE" style="text-transform: uppercase;" required>
+                                <small class="text-muted">Unique acronym or identifier for the department (e.g. CSE, IT, ECE).</small>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('departmentCode')}" th:errors="*{departmentCode}">Code Error</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-semibold">Description</label>
+                                <textarea class="form-control" th:field="*{description}" rows="3" placeholder="Optional notes or details about the department..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/departments}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> <span th:text="${isEdit ? 'Update Department' : 'Save Department'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Find My Exam Seat')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Student Sidebar -->
+        <div th:replace="~{fragments/layout :: studentSidebar('find-seat')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Find My Exam Seat')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Page Header with Print Button -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold m-0 text-dark"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Find My Exam Seat</h4>
+                        <small class="text-muted">Direct allocation lookup linked securely to your student record</small>
+                    </div>
+                    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm no-print">
+                        <i class="bi bi-printer me-1"></i> Print My Seat Details
+                    </button>
+                </div>
+
+                <!-- Student Identity Card -->
+                <div class="card mb-4 border-0 shadow-sm bg-light">
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">STUDENT NAME</small>
+                                <strong class="fs-6 text-dark" th:text="${student.fullName}">John Doe</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">REGISTER NUMBER</small>
+                                <span class="badge bg-secondary bg-opacity-10 text-dark border fw-bold px-2 py-1" th:text="${student.registerNumber}">2024CSE001</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">DEPARTMENT</small>
+                                <span class="fw-semibold text-primary" th:text="${student.department.departmentName}">Computer Science</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">SEMESTER & YEAR</small>
+                                <span th:text="'Semester ' + ${student.semester} + ' (' + ${student.academicYear} + ')'">Sem 6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- If NO allocations exist -->
+                <div th:if="${#lists.isEmpty(allAllocations)}" class="card shadow-sm text-center py-5">
+                    <div class="card-body">
+                        <div class="text-warning mb-3">
+                            <i class="bi bi-hourglass-top" style="font-size: 3.5rem;"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">No seat has been allocated for this examination yet.</h5>
+                        <p class="text-muted" style="max-width: 500px; margin: 0 auto;">
+                            Your seating arrangement is currently being processed by the examination cell. Please check back shortly or contact your examination administrator.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Active Exam Seat Cards -->
+                <div th:if="${not #lists.isEmpty(allAllocations)}" class="row g-4 mb-4">
+                    <div th:each="alloc : ${allAllocations}" class="col-lg-6">
+                        <div class="card shadow-sm h-100 border-primary border-opacity-25">
+                            <!-- Header with Course Code -->
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <span class="badge bg-white text-primary fw-bold me-2" th:text="${alloc.examination.subject.subjectCode}">CS601</span>
+                                    <strong class="fs-6" th:text="${alloc.examination.subject.subjectName}">Database Management Systems</strong>
+                                </div>
+                                <span class="badge bg-warning text-dark fw-bold">SEAT ASSIGNED</span>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <div class="text-muted small fw-semibold text-uppercase tracking-wider mb-1" th:text="${alloc.examination.examinationName}">Midterm Exam</div>
+
+                                <!-- Seat Highlight Box -->
+                                <div class="p-3 my-3 rounded-3 text-center border" style="background-color: #eff6ff; border-color: #bfdbfe !important;">
+                                    <div class="text-primary small fw-bold">ALLOCATED SEAT NUMBER</div>
+                                    <h1 class="display-3 fw-bold text-primary my-1" th:text="${alloc.seatNumber}">A-01</h1>
+                                    <div class="text-secondary fw-semibold">
+                                        <i class="bi bi-grid me-1"></i> Row: <strong class="text-dark" th:text="${alloc.rowNumber} + ' (' + ${T(com.example.examseating.service.SeatAllocationService).getRowLetter(alloc.rowNumber)} + ')'">Row 1 (A)</strong> &bull;
+                                        Column: <strong class="text-dark" th:text="${alloc.columnNumber}">1</strong>
+                                    </div>
+                                </div>
+
+                                <!-- Venue and Schedule Details -->
+                                <div class="row g-3 small">
+                                    <div class="col-sm-6">
+                                        <div class="border rounded p-2 bg-light">
+                                            <div class="text-muted fw-semibold"><i class="bi bi-building me-1 text-primary"></i> Examination Venue</div>
+                                            <div class="fw-bold fs-6 text-dark mt-1" th:text="${alloc.examinationHall.hallName}">Main Hall A</div>
+                                            <div class="text-muted" th:text="'Building: ' + ${alloc.examinationHall.buildingName}">Academic Block</div>
+                                            <div class="text-muted" th:text="'Floor & Room: ' + ${alloc.examinationHall.floor} + ', ' + ${alloc.examinationHall.roomNumber}">Ground Floor, Room 101</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="border rounded p-2 bg-light">
+                                            <div class="text-muted fw-semibold"><i class="bi bi-clock me-1 text-primary"></i> Date & Timing</div>
+                                            <div class="fw-bold fs-6 text-dark mt-1" th:text="${alloc.examination.examinationDate}">2026-10-22</div>
+                                            <div class="text-muted" th:text="'Hours: ' + ${alloc.examination.startTime} + ' - ' + ${alloc.examination.endTime}">09:30 - 12:30</div>
+                                            <div class="text-muted" th:text="'Session: ' + ${alloc.examination.session}">FORENOON (FN)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">
+                                        Attendance Status:
+                                        <span th:if="${alloc.attendanceStatus == 'PRESENT'}" class="badge bg-success">PRESENT</span>
+                                        <span th:if="${alloc.attendanceStatus == 'ABSENT'}" class="badge bg-danger">ABSENT</span>
+                                        <span th:if="${alloc.attendanceStatus == 'PENDING'}" class="badge bg-secondary">PENDING</span>
+                                    </span>
+                                    <a th:href="@{/student/exam/{id}/seat(id=${alloc.examination.id})}" class="btn btn-sm btn-outline-primary no-print">
+                                        <i class="bi bi-fullscreen me-1"></i> Full Seat Pass
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Registrations if any -->
+                <div th:if="${not #lists.isEmpty(pendingRegistrations)}" class="card shadow-sm mb-4 border-warning border-opacity-50">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h6 class="m-0 fw-bold text-dark"><i class="bi bi-clock-history text-warning me-2"></i>Examinations Pending Seating Allocation</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Examination</th>
+                                        <th>Course</th>
+                                        <th>Date & Session</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="p : ${pendingRegistrations}">
+                                        <td class="fw-semibold text-dark" th:text="${p.examination.examinationName}">Exam Name</td>
+                                        <td th:text="${p.examination.subject.subjectCode} + ' - ' + ${p.examination.subject.subjectName}">Subject</td>
+                                        <td th:text="${p.examination.examinationDate} + ' (' + ${p.examination.session} + ')'">Date</td>
+                                        <td>
+                                            <span class="badge bg-warning text-dark">Awaiting Hall Allocation</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isEdit ? 'Edit Examination Hall' : 'Add Examination Hall'})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('halls')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar(${isEdit ? 'Edit Examination Hall' : 'Add Examination Hall'})}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/halls}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Halls
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 700px;">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold" th:text="${isEdit ? 'Update Examination Hall' : 'Register New Examination Hall'}">Form Title</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/halls/save}" th:object="${hall}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div class="mb-3">
+                                <label for="hallName" class="form-label fw-semibold">Hall Name / Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{hallName}" th:classappend="${#fields.hasErrors('hallName') ? 'is-invalid' : ''}" placeholder="e.g. Main Hall A" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('hallName')}" th:errors="*{hallName}">Name Error</div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="buildingName" class="form-label fw-semibold">Building Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{buildingName}" placeholder="e.g. Academic Block 1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="floor" class="form-label fw-semibold">Floor</label>
+                                    <input type="text" class="form-control" th:field="*{floor}" placeholder="e.g. 1st Floor">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="roomNumber" class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{roomNumber}" placeholder="e.g. AB1-101" required>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-light rounded-3 mb-3 border">
+                                <div class="fw-semibold text-primary mb-2"><i class="bi bi-grid-3x3 me-1"></i> Seating Matrix Configuration</div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="numberOfRows" class="form-label fw-semibold small">Number of Rows <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" th:field="*{numberOfRows}" min="1" max="50" placeholder="e.g. 5" required id="rowsInput" oninput="calculateMatrix()">
+                                        <small class="text-muted">Rows are labelled A, B, C...</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="numberOfColumns" class="form-label fw-semibold small">Number of Columns <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" th:field="*{numberOfColumns}" min="1" max="50" placeholder="e.g. 6" required id="colsInput" oninput="calculateMatrix()">
+                                        <small class="text-muted">Columns are 01, 02, 03...</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="totalCapacity" class="form-label fw-semibold small">Total Exam Capacity <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" th:field="*{totalCapacity}" min="1" max="1000" placeholder="e.g. 30" required id="capInput" oninput="calculateMatrix()">
+                                        <small class="text-muted">Max students allowed</small>
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-muted small" id="matrixPreview">
+                                    Physical layout capacity: <strong><span id="physTotal">0</span></strong> seats.
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="status" class="form-label fw-semibold">Status</label>
+                                    <select class="form-select" th:field="*{status}">
+                                        <option value="ACTIVE">ACTIVE (Available for Seating Allocation)</option>
+                                        <option value="INACTIVE">INACTIVE (Maintenance / Unavailable)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="description" class="form-label fw-semibold">Description / Remarks</label>
+                                    <input type="text" class="form-control" th:field="*{description}" placeholder="Optional equipment or features">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/halls}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> <span th:text="${isEdit ? 'Update Hall' : 'Save Hall'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+    function calculateMatrix() {
+        const r = parseInt(document.getElementById('rowsInput').value) || 0;
+        const c = parseInt(document.getElementById('colsInput').value) || 0;
+        const cap = parseInt(document.getElementById('capInput').value) || 0;
+        const phys = r * c;
+        document.getElementById('physTotal').innerText = phys;
+
+        const preview = document.getElementById('matrixPreview');
+        if (phys > 0 && cap > phys) {
+            preview.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Warning: Configured capacity (' + cap + ') exceeds physical grid seats (' + phys + '). System will use max physical seats (' + phys + ').</span>';
+        } else if (phys > 0) {
+            preview.innerHTML = 'Physical layout capacity: <strong>' + phys + '</strong> seats (' + r + ' rows × ' + c + ' columns). Effective limit: <strong>' + Math.min(cap, phys) + '</strong> seats.';
+        }
+    }
+    document.addEventListener("DOMContentLoaded", calculateMatrix);
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Seating Chart - ' + ${grid.hallName})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('allocations')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Hall Seating Chart')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Print & Nav Controls -->
+                <div class="mb-3 d-flex justify-content-between align-items-center no-print">
+                    <a th:href="@{/admin/allocations/results/{id}(id=${grid.examinationId})}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Roster
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/admin/reports/hall/{id}/chart(id=${grid.hallId}, examId=${grid.examinationId})}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-printer me-1"></i> Printable Format
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-printer-fill me-1"></i> Print Chart
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hall and Exam Details Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="fw-bold text-primary m-0" th:text="${grid.hallName}">Hall A</h4>
+                                <div class="text-muted small mt-1">
+                                    <span th:text="${grid.buildingName}">Building</span> &bull;
+                                    <span th:text="${grid.floor}">Floor</span> &bull;
+                                    Room: <span th:text="${grid.roomNumber}">Room</span>
+                                </div>
+                                <div class="text-dark fw-semibold mt-2" th:text="${grid.examinationName}">Database Systems Final</div>
+                                <small class="text-muted" th:text="${grid.examDate} + ' (' + ${grid.examTime} + ')'">Date & Time</small>
+                            </div>
+                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 fs-6">
+                                    <span th:text="${grid.allocatedSeatsCount}">0</span> / <span th:text="${grid.totalCapacity}">0</span> Occupied
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2D Seating Grid -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Interactive Seating Layout Matrix</h6>
+                        <span class="badge bg-light text-muted border" th:text="${grid.numberOfRows} + ' Rows × ' + ${grid.numberOfColumns} + ' Columns'">5 × 6</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="seat-grid-container text-center">
+                            <!-- Podium -->
+                            <div class="seat-podium shadow-sm">
+                                <i class="bi bi-display me-2"></i> Blackboard / Invigilator Podium
+                            </div>
+
+                            <!-- Matrix Grid -->
+                            <div class="d-flex flex-column align-items-center">
+                                <div th:each="rowList : ${grid.grid}" class="d-flex justify-content-center mb-1">
+                                    <div th:each="cell : ${rowList}"
+                                         class="seat-cell"
+                                         th:classappend="${!cell.isAvailableSeat ? 'seat-unavailable' : (cell.isOccupied ? 'seat-occupied' : 'seat-empty')}"
+                                         th:title="${cell.isOccupied ? (cell.studentName + ' (' + cell.registerNumber + ')') : (cell.isAvailableSeat ? 'Unallocated Seat' : 'Not Available')}">
+                                        <div class="fw-bold" style="font-size: 0.72rem;" th:text="${cell.seatNumber}">A-01</div>
+                                        <div th:if="${cell.isOccupied}" class="text-truncate px-1" style="max-width: 64px; font-size: 0.65rem;" th:text="${cell.registerNumber}">2024CSE001</div>
+                                        <div th:if="${cell.isOccupied}" class="badge bg-primary px-1 py-0" style="font-size: 0.58rem;" th:text="${cell.departmentCode}">CSE</div>
+                                        <div th:if="${!cell.isOccupied and cell.isAvailableSeat}" class="text-muted" style="font-size: 0.62rem;">EMPTY</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Legend -->
+                            <div class="d-flex justify-content-center flex-wrap gap-4 mt-4 pt-3 border-top">
+                                <div class="seat-legend-item">
+                                    <div class="seat-legend-box seat-occupied"></div>
+                                    <span>Occupied Seat</span>
+                                </div>
+                                <div class="seat-legend-item">
+                                    <div class="seat-legend-box seat-empty"></div>
+                                    <span>Unoccupied Seat</span>
+                                </div>
+                                <div class="seat-legend-item">
+                                    <div class="seat-legend-box seat-unavailable"></div>
+                                    <span>Exceeds Hall Limit</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isEdit ? 'Edit Examination' : 'Schedule Examination'})}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('examinations')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar(${isEdit ? 'Edit Examination' : 'Schedule Examination'})}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3">
+                    <a th:href="@{/admin/examinations}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Examinations
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mx-auto" style="max-width: 750px;">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold" th:text="${isEdit ? 'Update Examination Schedule' : 'Schedule New College Examination'}">Form Title</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/examinations/save}" th:object="${examination}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <div class="mb-3">
+                                <label for="examinationName" class="form-label fw-semibold">Examination Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{examinationName}" th:classappend="${#fields.hasErrors('examinationName') ? 'is-invalid' : ''}" placeholder="e.g. B.Tech Semester VI Final: Database Management Systems" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('examinationName')}" th:errors="*{examinationName}">Title Error</div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="departmentId" class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{departmentId}" required id="deptSelect">
+                                        <option value="">Select Department</option>
+                                        <option th:each="dept : ${departments}"
+                                                th:value="${dept.id}"
+                                                th:text="${dept.departmentName} + ' (' + ${dept.departmentCode} + ')'">Dept</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="subjectId" class="form-label fw-semibold">Subject / Course <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{subjectId}" required id="subjectSelect">
+                                        <option value="">Select Subject</option>
+                                        <option th:each="sub : ${subjects}"
+                                                th:value="${sub.id}"
+                                                th:text="${sub.subjectName} + ' (' + ${sub.subjectCode} + ')'">Sub</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="semester" class="form-label fw-semibold">Semester <span class="text-danger">*</span></label>
+                                    <select class="form-select" th:field="*{semester}" required>
+                                        <option value="">Select Semester</option>
+                                        <option th:each="sem : ${#numbers.sequence(1, 8)}"
+                                                th:value="${sem}"
+                                                th:text="'Semester ' + ${sem}">Sem</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="academicYear" class="form-label fw-semibold">Academic Year <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{academicYear}" placeholder="e.g. 2026-2027" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="session" class="form-label fw-semibold">Session</label>
+                                    <select class="form-select" th:field="*{session}">
+                                        <option value="FORENOON">FORENOON (FN)</option>
+                                        <option value="AFTERNOON">AFTERNOON (AN)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <label for="examinationDate" class="form-label fw-semibold">Exam Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" th:field="*{examinationDate}" th:classappend="${#fields.hasErrors('examinationDate') ? 'is-invalid' : ''}" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('examinationDate')}" th:errors="*{examinationDate}">Date Error</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="startTime" class="form-label fw-semibold">Start Time <span class="text-danger">*</span></label>
+                                    <input type="time" class="form-control" th:field="*{startTime}" th:classappend="${#fields.hasErrors('startTime') ? 'is-invalid' : ''}" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">Time Error</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="endTime" class="form-label fw-semibold">End Time <span class="text-danger">*</span></label>
+                                    <input type="time" class="form-control" th:field="*{endTime}" th:classappend="${#fields.hasErrors('endTime') ? 'is-invalid' : ''}" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">End Time Error</div>
+                                </div>
+                            </div>
+
+                            <div th:if="${isEdit}" class="mb-4">
+                                <label for="status" class="form-label fw-semibold">Examination Status</label>
+                                <select class="form-select" th:field="*{status}">
+                                    <option value="SCHEDULED">SCHEDULED</option>
+                                    <option value="ALLOCATED">ALLOCATED</option>
+                                    <option value="COMPLETED">COMPLETED</option>
+                                    <option value="CANCELLED">CANCELLED</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/admin/examinations}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-check-lg me-1"></i> <span th:text="${isEdit ? 'Update Examination' : 'Schedule Examination'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Unallocated Candidates Report')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('reports')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Unallocated Candidates')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold m-0" th:text="'Unallocated Candidates: ' + ${examination.examinationName}">Unallocated Candidates</h5>
+                        <small class="text-muted">Students registered for this examination who currently do not have an assigned examination hall and seat</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/admin/allocations/generate(examId=${examination.id})}" class="btn btn-warning btn-sm fw-semibold">
+                            <i class="bi bi-cpu-fill me-1"></i> Allocate Seats
+                        </a>
+                        <a th:href="@{/admin/reports}" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Reports
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="m-0 fw-bold">Unallocated Student List</h6>
+                        <span class="badge" th:classappend="${#lists.isEmpty(unallocated) ? 'bg-success' : 'bg-danger'}"
+                              th:text="${#lists.size(unallocated)} + ' Unallocated'">0</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:if="${#lists.isEmpty(unallocated)}" class="text-center py-5 text-success">
+                            <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+                            <strong>All eligible students have been allocated a seat!</strong>
+                            <div class="text-muted small mt-1">There are no pending unallocated candidates for this examination.</div>
+                        </div>
+                        <div th:if="${not #lists.isEmpty(unallocated)}" class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Register Number</th>
+                                        <th>Student Full Name</th>
+                                        <th>Department</th>
+                                        <th>Semester</th>
+                                        <th>Email</th>
+                                        <th>Registered Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="reg : ${unallocated}">
+                                        <td>
+                                            <span class="badge bg-secondary bg-opacity-10 text-dark border px-2 py-1 fw-bold"
+                                                  th:text="${reg.student.registerNumber}">2024CSE001</span>
+                                        </td>
+                                        <td class="fw-semibold text-dark" th:text="${reg.student.fullName}">Student Name</td>
+                                        <td>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"
+                                                  th:text="${reg.student.department.departmentCode}">CSE</span>
+                                        </td>
+                                        <td th:text="'Sem ' + ${reg.student.semester}">Sem 6</td>
+                                        <td th:text="${reg.student.email}">email@college.edu</td>
+                                        <td class="text-muted small" th:text="${reg.registeredAt}">Timestamp</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

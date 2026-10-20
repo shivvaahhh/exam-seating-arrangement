@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Departments')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('departments')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Department Management')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold m-0">Academic Departments</h5>
+                        <small class="text-muted">Manage college branches, departments, and course affiliations</small>
+                    </div>
+                    <a th:href="@{/admin/departments/new}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i> Add Department
+                    </a>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body p-3">
+                        <form th:action="@{/admin/departments}" method="get" class="row g-2 align-items-center">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                    <input type="text" name="keyword" class="form-control border-start-0 ps-0" placeholder="Search by name or code..." th:value="${keyword}">
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-outline-secondary">Search</button>
+                                <a th:if="${keyword != null and keyword != ''}" th:href="@{/admin/departments}" class="btn btn-link text-decoration-none text-muted">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
+                        <div th:if="${#lists.isEmpty(departments)}" class="text-center py-5 text-muted">
+                            <i class="bi bi-diagram-3 fs-1 text-muted d-block mb-2"></i>
+                            No departments found. Click "Add Department" to register one.
+                        </div>
+                        <div th:if="${not #lists.isEmpty(departments)}" class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Department Name</th>
+                                        <th>Description</th>
+                                        <th>Enrolled Students</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="dept : ${departments}">
+                                        <td>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 fw-bold"
+                                                  th:text="${dept.departmentCode}">CSE</span>
+                                        </td>
+                                        <td class="fw-semibold text-dark" th:text="${dept.departmentName}">Computer Science</td>
+                                        <td class="text-muted" th:text="${dept.description != null ? dept.description : '—'}">Description</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1" th:text="${dept.studentCount} + ' Students'">0 Students</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a th:href="@{/admin/departments/edit/{id}(id=${dept.id})}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${dept.id}" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+
+                                            <!-- Delete Confirmation Modal -->
+                                            <div class="modal fade" th:id="'deleteModal' + ${dept.id}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body text-start">
+                                                            Are you sure you want to delete department <strong th:text="${dept.departmentName}">Dept</strong> (<span th:text="${dept.departmentCode}">CODE</span>)?
+                                                            <div class="text-danger small mt-2">Departments with enrolled students or subjects cannot be deleted.</div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                            <form th:action="@{/admin/departments/delete/{id}(id=${dept.id})}" method="post">
+                                                                <button type="submit" class="btn btn-danger btn-sm">Yes, Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

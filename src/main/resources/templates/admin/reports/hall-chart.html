@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Printable Hall Chart - ' + ${grid.hallName}">Hall Seating Grid Chart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body { background-color: #fff; font-family: 'Times New Roman', Times, serif; color: #000; }
+        .header-title { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 14px; }
+        .institution-name { font-size: 1.3rem; font-weight: bold; text-transform: uppercase; }
+        .sheet-title { font-size: 1.1rem; font-weight: bold; text-transform: uppercase; }
+        @media print {
+            .no-print { display: none !important; }
+            @page { size: A4 landscape; margin: 8mm; }
+        }
+    </style>
+</head>
+<body class="p-3">
+
+<div class="no-print mb-4 p-3 bg-light border rounded d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-2">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer-fill me-1"></i> Print / Save PDF (Landscape)
+        </button>
+        <button onclick="window.close()" class="btn btn-outline-secondary">
+            Close Window
+        </button>
+    </div>
+    <div class="small text-muted">Door Display Chart (Landscape layout recommended)</div>
+</div>
+
+<div class="header-title">
+    <div class="institution-name" th:text="${institutionName}">GOVERNMENT ENGINEERING COLLEGE</div>
+    <div class="small text-muted" th:text="${institutionTagline}">Controller of Examinations</div>
+    <div class="sheet-title mt-1">HALL DOOR SEATING PLAN - <span th:text="${grid.hallName}">Hall A</span></div>
+</div>
+
+<div class="row g-2 mb-3 small">
+    <div class="col-6">
+        <div><strong>Hall / Room:</strong> <span th:text="${grid.hallName} + ' (' + ${grid.roomNumber} + ', ' + ${grid.buildingName} + ')'">Hall A</span></div>
+        <div><strong>Examination:</strong> <span th:text="${grid.examinationName}">Database Systems</span></div>
+    </div>
+    <div class="col-6 text-end">
+        <div><strong>Date & Time:</strong> <span th:text="${grid.examDate} + ' (' + ${grid.examTime} + ')'">2026-10-22</span></div>
+        <div><strong>Capacity:</strong> <span th:text="${grid.allocatedSeatsCount}">0</span> / <span th:text="${grid.totalCapacity}">0</span> Occupied</div>
+    </div>
+</div>
+
+<div class="seat-grid-container text-center p-3 border">
+    <div class="seat-podium mb-3">
+        FRONT / BLACKBOARD / INVIGILATOR DESK
+    </div>
+
+    <div class="d-flex flex-column align-items-center">
+        <div th:each="rowList : ${grid.grid}" class="d-flex justify-content-center mb-1">
+            <div th:each="cell : ${rowList}"
+                 class="seat-cell"
+                 style="width: 76px; height: 76px;"
+                 th:classappend="${!cell.isAvailableSeat ? 'seat-unavailable' : (cell.isOccupied ? 'seat-occupied' : 'seat-empty')}">
+                <div class="fw-bold" style="font-size: 0.8rem;" th:text="${cell.seatNumber}">A-01</div>
+                <div th:if="${cell.isOccupied}" class="fw-bold text-truncate" style="font-size: 0.68rem;" th:text="${cell.registerNumber}">2024CSE001</div>
+                <div th:if="${cell.isOccupied}" class="badge bg-primary px-1 py-0" style="font-size: 0.6rem;" th:text="${cell.departmentCode}">CSE</div>
+                <div th:if="${!cell.isOccupied and cell.isAvailableSeat}" class="text-muted" style="font-size: 0.65rem;">EMPTY</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center gap-4 mt-3 pt-2 border-top small">
+        <div class="seat-legend-item">
+            <div class="seat-legend-box seat-occupied"></div>
+            <span>Allocated Student</span>
+        </div>
+        <div class="seat-legend-item">
+            <div class="seat-legend-box seat-empty"></div>
+            <span>Vacant Seat</span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

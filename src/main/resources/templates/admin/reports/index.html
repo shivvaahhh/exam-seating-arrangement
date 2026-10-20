@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reports & Attendance')}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{fragments/layout :: adminSidebar('reports')}"></div>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Examination Reports Hub')}"></div>
+
+            <div class="p-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold m-0">Printable Reports & Attendance Records</h5>
+                    <small class="text-muted">Generate official examination documents, invigilator sheets, and hall utilization metrics</small>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <!-- Report Card 1: Attendance Sheet -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-inline-flex p-3 rounded-circle bg-primary bg-opacity-10 text-primary mb-3">
+                                        <i class="bi bi-person-lines-fill fs-3"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark">Invigilator Attendance Sheet</h5>
+                                    <p class="text-muted small">
+                                        Print-formatted candidate attendance ledger with serial numbers, register numbers, student names, assigned seats, and signature columns.
+                                    </p>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                            Select Examination to Print
+                                        </button>
+                                        <ul class="dropdown-menu w-100 shadow">
+                                            <li th:each="exam : ${examinations}">
+                                                <a class="dropdown-item small" th:href="@{/admin/reports/attendance/{id}(id=${exam.id})}" target="_blank"
+                                                   th:text="${exam.examinationName}">Exam</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Card 2: Seating Chart -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+                                        <i class="bi bi-file-earmark-spreadsheet-fill fs-3"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark">Examination Seating Roster</h5>
+                                    <p class="text-muted small">
+                                        Full official allocation list showing hall allocations, room numbers, seat labels, and student details.
+                                    </p>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-success btn-sm dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                            Select Examination
+                                        </button>
+                                        <ul class="dropdown-menu w-100 shadow">
+                                            <li th:each="exam : ${examinations}">
+                                                <a class="dropdown-item small" th:href="@{/admin/reports/examination/{id}(id=${exam.id})}" target="_blank"
+                                                   th:text="${exam.examinationName}">Exam</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Card 3: Hall Capacity Utilization -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-inline-flex p-3 rounded-circle bg-info bg-opacity-10 text-info mb-3">
+                                        <i class="bi bi-pie-chart-fill fs-3"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark">Hall Capacity Utilization</h5>
+                                    <p class="text-muted small">
+                                        Overview of configured vs. utilized seats across all college examination halls, identifying bottlenecks and unused capacities.
+                                    </p>
+                                </div>
+                                <div class="mt-3">
+                                    <a th:href="@{/admin/reports/utilization}" class="btn btn-outline-info btn-sm w-100">
+                                        <i class="bi bi-bar-chart me-1"></i> View Utilization Report
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unallocated Candidate Section -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-person-exclamation text-danger me-2"></i>Unallocated Candidates Audit</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">Check whether any eligible registered students remain unallocated for an active examination.</p>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <select id="unallocExamSelect" class="form-select">
+                                    <option value="">Select Examination to Check...</option>
+                                    <option th:each="exam : ${examinations}"
+                                            th:value="${exam.id}"
+                                            th:text="${exam.examinationName}">Exam</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-outline-danger" onclick="viewUnallocated()">
+                                    <i class="bi bi-search me-1"></i> Audit Unallocated
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<script>
+    function viewUnallocated() {
+        const select = document.getElementById('unallocExamSelect');
+        if (select.value) {
+            window.location.href = '/admin/reports/unallocated/' + select.value;
+        } else {
+            alert('Please select an examination first.');
+        }
+    }
+</script>
+</body>
+</html>
