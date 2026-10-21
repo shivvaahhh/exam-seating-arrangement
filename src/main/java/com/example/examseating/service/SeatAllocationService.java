@@ -378,7 +378,7 @@ public class SeatAllocationService {
         return allocationRepository.findByStudent_User_UsernameOrderByExamination_ExaminationDateAscExamination_StartTimeAsc(username);
     }
 
-    private String getRowLetter(int rowNumber) {
+    public static String getRowLetter(int rowNumber) {
         StringBuilder sb = new StringBuilder();
         int r = rowNumber;
         while (r > 0) {
