@@ -69,7 +69,7 @@ public class StudentServiceTest {
         when(studentRepository.existsByRegisterNumber("2024CSE001")).thenReturn(false);
         when(studentRepository.existsByEmail("aditi@college.edu")).thenReturn(false);
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(userRepository.existsByUsername("2024cse001")).thenReturn(false);
+        when(userRepository.existsByUsernameIgnoreCase("2024cse001")).thenReturn(false);
         when(passwordEncoder.encode(any())).thenReturn("hashed_pass");
 
         User savedUser = new User("2024cse001", "hashed_pass", "aditi@college.edu", "ROLE_STUDENT");

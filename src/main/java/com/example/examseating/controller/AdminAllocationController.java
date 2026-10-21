@@ -139,6 +139,48 @@ public class AdminAllocationController {
         return "admin/allocations/seating-chart";
     }
 
+    @PostMapping("/auto-allocate/{examId}")
+    public String autoAllocate(@PathVariable Long examId,
+                               @RequestParam(value = "mode", defaultValue = "MIXED") String mode,
+                               @RequestParam(value = "hallId", required = false) Long hallId,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            List<SeatAllocation> existing = allocationService.getAllocationsForExam(examId);
+            List<Long> hallIds = existing.stream()
+                    .map(a -> a.getExaminationHall().getId())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (hallIds.isEmpty()) {
+                if (hallId != null) {
+                    hallIds = List.of(hallId);
+                } else {
+                    hallIds = hallService.findActiveHalls().stream()
+                            .map(ExaminationHall::getId)
+                            .collect(Collectors.toList());
+                }
+            }
+
+            AllocationRequestDto request = new AllocationRequestDto();
+            request.setExaminationId(examId);
+            request.setHallIds(hallIds);
+            request.setAllocationMode(mode);
+            request.setSortStrategy("MIXED".equalsIgnoreCase(mode) ? "MIXED" : "DEPT_REGNO");
+            request.setForceRegenerate(true);
+
+            AllocationResultDto result = allocationService.allocateSeats(request);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Seats re-allocated using " + mode + " mode! " + (result.getValidationSummary() != null ? result.getValidationSummary() : ""));
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Auto-allocation failed: " + ex.getMessage());
+        }
+
+        if (hallId != null) {
+            return "redirect:/admin/allocations/grid/" + examId + "/" + hallId;
+        }
+        return "redirect:/admin/allocations/results/" + examId;
+    }
+
     @PostMapping("/regenerate/{examId}")
     public String regenerate(@PathVariable Long examId,
                              @RequestParam("hallIds") List<Long> hallIds,

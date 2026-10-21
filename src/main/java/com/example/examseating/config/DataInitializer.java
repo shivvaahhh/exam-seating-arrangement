@@ -270,20 +270,24 @@ public class DataInitializer implements CommandLineRunner {
 
             log.info("Initialized scheduled examinations.");
 
-            // Register CSE students for Exam 1
+            // Register CSE and IT students for Exam 1 to demonstrate multi-department mixed seating
             List<Student> cseStudents = studentRepository.findByDepartmentIdAndSemester(cse.getId(), 6);
             for (Student s : cseStudents) {
                 registrationRepository.save(new ExaminationRegistration(exam1, s));
             }
-
-            // Register IT students for Exam 2 (Fixes 0 Candidates issue!)
             List<Student> itStudents = studentRepository.findByDepartmentIdAndSemester(it.getId(), 6);
+            for (Student s : itStudents) {
+                registrationRepository.save(new ExaminationRegistration(exam1, s));
+            }
+            log.info("Registered {} CSE and {} IT students for exam: {}", cseStudents.size(), itStudents.size(), exam1.getExaminationName());
+
+            // Register IT students for Exam 2
             for (Student s : itStudents) {
                 registrationRepository.save(new ExaminationRegistration(exam2, s));
             }
             log.info("Registered {} IT students for exam: {}", itStudents.size(), exam2.getExaminationName());
 
-            // Register CSE students for Exam 3 (Fixes 0 Candidates issue!)
+            // Register CSE students for Exam 3
             if (exam3 != null) {
                 for (Student s : cseStudents) {
                     registrationRepository.save(new ExaminationRegistration(exam3, s));
@@ -300,17 +304,18 @@ public class DataInitializer implements CommandLineRunner {
             }
             log.info("Assigned proctors Dr. Ramesh and Prof. Priya to Exam 1 halls.");
 
-            // Run initial automatic seat allocation for exam 1
+            // Run initial automatic seat allocation for exam 1 using MIXED mode
             if (hallA != null && hallB != null) {
                 try {
                     AllocationRequestDto allocReq = new AllocationRequestDto();
                     allocReq.setExaminationId(exam1.getId());
                     allocReq.setHallIds(Arrays.asList(hallA.getId(), hallB.getId()));
-                    allocReq.setSortStrategy("DEPT_REGNO");
+                    allocReq.setAllocationMode("MIXED");
+                    allocReq.setSortStrategy("MIXED");
                     allocReq.setForceRegenerate(false);
 
                     allocationService.allocateSeats(allocReq);
-                    log.info("Successfully pre-allocated seats for demo exam 1!");
+                    log.info("Successfully pre-allocated seats for demo exam 1 with MIXED mode!");
                 } catch (Exception ex) {
                     log.error("Initial allocation failed: {}", ex.getMessage());
                 }

@@ -14,6 +14,8 @@ public class AllocationRequestDto {
 
     private String sortStrategy = "DEPT_REGNO"; // "DEPT_REGNO" or "REGNO_ONLY"
 
+    private String allocationMode = "SEQUENTIAL"; // "SEQUENTIAL" or "MIXED"
+
     private boolean forceRegenerate = false;
 
     public AllocationRequestDto() {}
@@ -21,6 +23,12 @@ public class AllocationRequestDto {
     public AllocationRequestDto(Long examinationId, List<Long> hallIds) {
         this.examinationId = examinationId;
         this.hallIds = hallIds;
+    }
+
+    public AllocationRequestDto(Long examinationId, List<Long> hallIds, String allocationMode) {
+        this.examinationId = examinationId;
+        this.hallIds = hallIds;
+        this.allocationMode = allocationMode;
     }
 
     public Long getExaminationId() {
@@ -45,6 +53,14 @@ public class AllocationRequestDto {
 
     public void setSortStrategy(String sortStrategy) {
         this.sortStrategy = sortStrategy;
+    }
+
+    public String getAllocationMode() {
+        return allocationMode;
+    }
+
+    public void setAllocationMode(String allocationMode) {
+        this.allocationMode = allocationMode;
     }
 
     public boolean isForceRegenerate() {

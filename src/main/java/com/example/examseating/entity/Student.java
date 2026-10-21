@@ -159,4 +159,21 @@ public class Student {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    /**
+     * Resolves the student's department code.
+     * Uses the dedicated department entity if present, or derives from the register number (e.g. 2024IT001 -> IT).
+     */
+    public String getDerivedDepartmentCode() {
+        if (this.department != null && this.department.getDepartmentCode() != null && !this.department.getDepartmentCode().trim().isEmpty()) {
+            return this.department.getDepartmentCode().trim().toUpperCase();
+        }
+        if (this.registerNumber != null) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("[A-Za-z]+").matcher(this.registerNumber);
+            if (m.find()) {
+                return m.group().toUpperCase();
+            }
+        }
+        return "GENERAL";
+    }
 }

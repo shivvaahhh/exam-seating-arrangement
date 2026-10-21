@@ -24,6 +24,15 @@ public class HallSeatGridDto {
     private String examTime;
     private String examSession;
 
+    // Adjacency Validation & Mode
+    private String allocationMode = "SEQUENTIAL";
+    private int horizontalAdjacentPairs = 0;
+    private int verticalAdjacentPairs = 0;
+    private int diagonalAdjacentPairs = 0;
+    private int totalAdjacentPairs = 0;
+    private String validationSummary = "Adjacent same-dept pairs: 0";
+    private String validationWarning;
+
     // Grid: row by row, each row contains columns (for admin seating chart)
     private List<List<SeatCellDto>> grid = new ArrayList<>();
 
@@ -190,4 +199,25 @@ public class HallSeatGridDto {
 
     public List<RowDto> getGridRows() { return gridRows; }
     public void setGridRows(List<RowDto> gridRows) { this.gridRows = gridRows; }
+
+    public String getAllocationMode() { return allocationMode; }
+    public void setAllocationMode(String allocationMode) { this.allocationMode = allocationMode; }
+
+    public int getHorizontalAdjacentPairs() { return horizontalAdjacentPairs; }
+    public void setHorizontalAdjacentPairs(int horizontalAdjacentPairs) { this.horizontalAdjacentPairs = horizontalAdjacentPairs; }
+
+    public int getVerticalAdjacentPairs() { return verticalAdjacentPairs; }
+    public void setVerticalAdjacentPairs(int verticalAdjacentPairs) { this.verticalAdjacentPairs = verticalAdjacentPairs; }
+
+    public int getDiagonalAdjacentPairs() { return diagonalAdjacentPairs; }
+    public void setDiagonalAdjacentPairs(int diagonalAdjacentPairs) { this.diagonalAdjacentPairs = diagonalAdjacentPairs; }
+
+    public int getTotalAdjacentPairs() { return totalAdjacentPairs; }
+    public void setTotalAdjacentPairs(int totalAdjacentPairs) { this.totalAdjacentPairs = totalAdjacentPairs; }
+
+    public String getValidationSummary() { return validationSummary; }
+    public void setValidationSummary(String validationSummary) { this.validationSummary = validationSummary; }
+
+    public String getValidationWarning() { return validationWarning; }
+    public void setValidationWarning(String validationWarning) { this.validationWarning = validationWarning; }
 }

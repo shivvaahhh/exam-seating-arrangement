@@ -22,6 +22,14 @@ public class AllocationResultDto {
     private boolean success;
     private String message;
 
+    private String allocationMode = "SEQUENTIAL";
+    private int horizontalAdjacentPairs = 0;
+    private int verticalAdjacentPairs = 0;
+    private int diagonalAdjacentPairs = 0;
+    private int totalAdjacentPairs = 0;
+    private String validationSummary;
+    private String validationWarning;
+
     private List<HallSummaryDto> hallSummaries = new ArrayList<>();
 
     public AllocationResultDto() {}
@@ -97,4 +105,25 @@ public class AllocationResultDto {
     public void setHallSummaries(List<HallSummaryDto> hallSummaries) { this.hallSummaries = hallSummaries; }
     public List<HallSummaryDto> getHalls() { return hallSummaries; }
     public void setHalls(List<HallSummaryDto> halls) { this.hallSummaries = halls; }
+
+    public String getAllocationMode() { return allocationMode; }
+    public void setAllocationMode(String allocationMode) { this.allocationMode = allocationMode; }
+
+    public int getHorizontalAdjacentPairs() { return horizontalAdjacentPairs; }
+    public void setHorizontalAdjacentPairs(int horizontalAdjacentPairs) { this.horizontalAdjacentPairs = horizontalAdjacentPairs; }
+
+    public int getVerticalAdjacentPairs() { return verticalAdjacentPairs; }
+    public void setVerticalAdjacentPairs(int verticalAdjacentPairs) { this.verticalAdjacentPairs = verticalAdjacentPairs; }
+
+    public int getDiagonalAdjacentPairs() { return diagonalAdjacentPairs; }
+    public void setDiagonalAdjacentPairs(int diagonalAdjacentPairs) { this.diagonalAdjacentPairs = diagonalAdjacentPairs; }
+
+    public int getTotalAdjacentPairs() { return totalAdjacentPairs; }
+    public void setTotalAdjacentPairs(int totalAdjacentPairs) { this.totalAdjacentPairs = totalAdjacentPairs; }
+
+    public String getValidationSummary() { return validationSummary; }
+    public void setValidationSummary(String validationSummary) { this.validationSummary = validationSummary; }
+
+    public String getValidationWarning() { return validationWarning; }
+    public void setValidationWarning(String validationWarning) { this.validationWarning = validationWarning; }
 }

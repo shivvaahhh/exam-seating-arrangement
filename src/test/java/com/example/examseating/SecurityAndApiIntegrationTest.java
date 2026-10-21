@@ -61,7 +61,7 @@ public class SecurityAndApiIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "student", roles = {"STUDENT"})
+    @WithMockUser(username = "2024cse001", roles = {"STUDENT"})
     @DisplayName("Student user should successfully access /student/dashboard")
     void testStudentAccessToStudentDashboard() throws Exception {
         mockMvc.perform(get("/student/dashboard"))

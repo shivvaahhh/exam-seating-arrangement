@@ -103,14 +103,44 @@
                                 </div>
                             </div>
 
+                            <!-- Allocation Mode & Strategy -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">3. Allocation Mode</label>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-6">
+                                        <div class="card p-3 border-2 h-100" style="cursor: pointer;" onclick="document.getElementById('modeSequential').click()">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" th:field="*{allocationMode}" id="modeSequential" value="SEQUENTIAL" checked>
+                                                <label class="form-check-label fw-bold text-dark" for="modeSequential">
+                                                    <i class="bi bi-list-ol me-1 text-primary"></i> Sequential Mode
+                                                </label>
+                                                <small class="text-muted d-block mt-1">Students are seated department-by-department continuously from Row A-01.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card p-3 border-2 h-100" style="cursor: pointer;" onclick="document.getElementById('modeMixed').click()">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" th:field="*{allocationMode}" id="modeMixed" value="MIXED">
+                                                <label class="form-check-label fw-bold text-dark" for="modeMixed">
+                                                    <i class="bi bi-shuffle me-1 text-success"></i> Mixed Mode (Recommended)
+                                                </label>
+                                                <small class="text-muted d-block mt-1">Interleaves departments in a checkerboard matrix to prevent adjacent same-dept seating.</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Sorting Rule Strategy -->
                             <div class="mb-4">
-                                <label for="sortStrategy" class="form-label fw-semibold">3. Student Seating Order Strategy</label>
+                                <label for="sortStrategy" class="form-label fw-semibold">4. Student Sorting Sub-Strategy</label>
                                 <select class="form-select" th:field="*{sortStrategy}">
                                     <option value="DEPT_REGNO">Department-wise & Register Number Order (Deterministic standard)</option>
+                                    <option value="MIXED">Mixed Checkerboard Order</option>
                                     <option value="REGNO_ONLY">Register Number Ascending Order</option>
                                 </select>
-                                <small class="text-muted">Students are distributed across seats continuously starting from Row A, Column 01.</small>
+                                <small class="text-muted">Controls how candidate lists are pre-ordered before matrix seat assignment.</small>
                             </div>
 
                             <!-- Force Regenerate if already allocated -->
