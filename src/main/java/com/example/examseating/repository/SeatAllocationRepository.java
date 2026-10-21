@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,4 +59,24 @@ public interface SeatAllocationRepository extends JpaRepository<SeatAllocation, 
                                          @Param("hallId") Long hallId,
                                          @Param("deptId") Long deptId,
                                          @Param("keyword") String keyword);
+
+    @Query("SELECT sa FROM SeatAllocation sa WHERE sa.student.id = :studentId " +
+           "AND sa.examination.examinationDate = :examDate " +
+           "AND sa.examination.session = :session " +
+           "AND sa.examination.id <> :examId")
+    List<SeatAllocation> findClashingStudentAllocations(@Param("studentId") Long studentId,
+                                                       @Param("examDate") LocalDate examDate,
+                                                       @Param("session") String session,
+                                                       @Param("examId") Long examId);
+
+    @Query("SELECT sa FROM SeatAllocation sa WHERE sa.examinationHall.id = :hallId " +
+           "AND sa.seatNumber = :seatNumber " +
+           "AND sa.examination.examinationDate = :examDate " +
+           "AND sa.examination.session = :session " +
+           "AND sa.examination.id <> :examId")
+    List<SeatAllocation> findClashingSeatAllocations(@Param("hallId") Long hallId,
+                                                    @Param("seatNumber") String seatNumber,
+                                                    @Param("examDate") LocalDate examDate,
+                                                    @Param("session") String session,
+                                                    @Param("examId") Long examId);
 }

@@ -11,6 +11,8 @@ public class DashboardStatsDto {
     private long upcomingExams;
     private long totalAllocatedStudents;
     private long studentsNotYetAllocated;
+    private long totalInvigilators;
+    private long totalAssignedDuties;
 
     private Long totalActiveCapacity;
 
@@ -64,6 +66,22 @@ public class DashboardStatsDto {
 
     public void setStudentsNotYetAllocated(long studentsNotYetAllocated) {
         this.studentsNotYetAllocated = studentsNotYetAllocated;
+    }
+
+    public long getTotalInvigilators() {
+        return totalInvigilators;
+    }
+
+    public void setTotalInvigilators(long totalInvigilators) {
+        this.totalInvigilators = totalInvigilators;
+    }
+
+    public long getTotalAssignedDuties() {
+        return totalAssignedDuties;
+    }
+
+    public void setTotalAssignedDuties(long totalAssignedDuties) {
+        this.totalAssignedDuties = totalAssignedDuties;
     }
 
     public Long getTotalActiveCapacity() {

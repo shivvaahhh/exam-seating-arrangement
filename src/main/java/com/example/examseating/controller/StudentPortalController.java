@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,8 +48,10 @@ public class StudentPortalController {
 
         model.addAttribute("student", student);
         model.addAttribute("allocations", allocations);
+        model.addAttribute("registrations", registrations);
         model.addAttribute("registeredExamsCount", registrations.size());
         model.addAttribute("allocatedExamsCount", allocations.size());
+        model.addAttribute("institutionName", reportService.getInstitutionName());
         return "student/dashboard";
     }
 
@@ -56,15 +59,18 @@ public class StudentPortalController {
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         Student student = getAuthenticatedStudent(userDetails);
         model.addAttribute("student", student);
+        model.addAttribute("username", userDetails.getUsername());
         return "student/profile";
     }
 
     @GetMapping("/find-seat")
-    public String findSeat(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String findSeat(@RequestParam(value = "regNo", required = false) String regNo,
+                           @AuthenticationPrincipal UserDetails userDetails,
+                           Model model) {
         Student student = getAuthenticatedStudent(userDetails);
+        // Security rule: search is strictly restricted to logged-in student's own register number!
         List<SeatAllocation> allAllocations = allocationService.getAllocationsForStudent(student.getId());
 
-        // Upcoming and past allocations
         LocalDate today = LocalDate.now();
         List<SeatAllocation> upcomingAllocations = allAllocations.stream()
                 .filter(a -> !a.getExamination().getExaminationDate().isBefore(today))
@@ -80,13 +86,14 @@ public class StudentPortalController {
         model.addAttribute("allAllocations", allAllocations);
         model.addAttribute("pendingRegistrations", pendingRegistrations);
         model.addAttribute("institutionName", reportService.getInstitutionName());
+        model.addAttribute("searchedRegNo", student.getRegisterNumber());
         return "student/find-seat";
     }
 
     @GetMapping("/exam/{examId}/seat")
     public String viewExamSeat(@AuthenticationPrincipal UserDetails userDetails,
-                               @PathVariable Long examId,
-                               Model model) {
+                                @PathVariable Long examId,
+                                Model model) {
         Student student = getAuthenticatedStudent(userDetails);
 
         SeatAllocation allocation = allocationService.getAllocationsForStudent(student.getId()).stream()
@@ -97,7 +104,24 @@ public class StudentPortalController {
         model.addAttribute("student", student);
         model.addAttribute("allocation", allocation);
         model.addAttribute("institutionName", reportService.getInstitutionName());
+        model.addAttribute("institutionTagline", reportService.getInstitutionTagline());
+        model.addAttribute("academicYear", reportService.getAcademicYear());
         return "student/seat-details";
+    }
+
+    @GetMapping("/hall-ticket")
+    public String hallTicket(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        Student student = getAuthenticatedStudent(userDetails);
+        List<SeatAllocation> allocations = allocationService.getAllocationsForStudent(student.getId());
+        List<ExaminationRegistration> registrations = registrationRepository.findByStudentId(student.getId());
+
+        model.addAttribute("student", student);
+        model.addAttribute("allocations", allocations);
+        model.addAttribute("registrations", registrations);
+        model.addAttribute("institutionName", reportService.getInstitutionName());
+        model.addAttribute("institutionTagline", reportService.getInstitutionTagline());
+        model.addAttribute("academicYear", reportService.getAcademicYear());
+        return "student/hall-ticket";
     }
 
     private Student getAuthenticatedStudent(UserDetails userDetails) {

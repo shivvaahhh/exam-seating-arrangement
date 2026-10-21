@@ -4,9 +4,11 @@ import com.example.examseating.dto.ExaminationDto;
 import com.example.examseating.dto.HallSeatGridDto;
 import com.example.examseating.entity.ExaminationHall;
 import com.example.examseating.entity.ExaminationRegistration;
+import com.example.examseating.entity.InvigilatorAssignment;
 import com.example.examseating.entity.SeatAllocation;
 import com.example.examseating.service.ExaminationHallService;
 import com.example.examseating.service.ExaminationService;
+import com.example.examseating.service.InvigilatorService;
 import com.example.examseating.service.ReportService;
 import com.example.examseating.service.SeatAllocationService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,15 +30,18 @@ public class AdminReportController {
     private final ExaminationService examinationService;
     private final ExaminationHallService hallService;
     private final SeatAllocationService allocationService;
+    private final InvigilatorService invigilatorService;
 
     public AdminReportController(ReportService reportService,
                                  ExaminationService examinationService,
                                  ExaminationHallService hallService,
-                                 SeatAllocationService allocationService) {
+                                 SeatAllocationService allocationService,
+                                 InvigilatorService invigilatorService) {
         this.reportService = reportService;
         this.examinationService = examinationService;
         this.hallService = hallService;
         this.allocationService = allocationService;
+        this.invigilatorService = invigilatorService;
     }
 
     @GetMapping
@@ -54,9 +59,11 @@ public class AdminReportController {
     public String examinationSeatingReport(@PathVariable Long examId, Model model) {
         ExaminationDto exam = examinationService.findById(examId);
         List<SeatAllocation> allocations = reportService.getExaminationAllocations(examId);
+        List<InvigilatorAssignment> duties = invigilatorService.getAssignmentsForExam(examId);
 
         model.addAttribute("examination", exam);
         model.addAttribute("allocations", allocations);
+        model.addAttribute("duties", duties);
         model.addAttribute("institutionName", reportService.getInstitutionName());
         model.addAttribute("institutionTagline", reportService.getInstitutionTagline());
         model.addAttribute("academicYear", reportService.getAcademicYear());
@@ -69,11 +76,15 @@ public class AdminReportController {
                                   Model model) {
         ExaminationDto exam = examinationService.findById(examId);
         List<SeatAllocation> allocations;
+        List<InvigilatorAssignment> duties;
+
         if (hallId != null) {
             allocations = reportService.getHallAllocationsForExam(examId, hallId);
+            duties = invigilatorService.getAssignmentsForExamAndHall(examId, hallId);
             model.addAttribute("selectedHall", hallService.findById(hallId));
         } else {
             allocations = reportService.getExaminationAllocations(examId);
+            duties = invigilatorService.getAssignmentsForExam(examId);
         }
 
         List<ExaminationHall> usedHalls = reportService.getExaminationAllocations(examId).stream()
@@ -84,6 +95,7 @@ public class AdminReportController {
         model.addAttribute("examination", exam);
         model.addAttribute("allocations", allocations);
         model.addAttribute("usedHalls", usedHalls);
+        model.addAttribute("duties", duties);
         model.addAttribute("selectedHallId", hallId);
         model.addAttribute("institutionName", reportService.getInstitutionName());
         model.addAttribute("institutionTagline", reportService.getInstitutionTagline());
@@ -96,7 +108,10 @@ public class AdminReportController {
                                    @RequestParam("examId") Long examId,
                                    Model model) {
         HallSeatGridDto grid = allocationService.getHallSeatGrid(examId, hallId);
+        List<InvigilatorAssignment> duties = invigilatorService.getAssignmentsForExamAndHall(examId, hallId);
+
         model.addAttribute("grid", grid);
+        model.addAttribute("duties", duties);
         model.addAttribute("institutionName", reportService.getInstitutionName());
         model.addAttribute("institutionTagline", reportService.getInstitutionTagline());
         model.addAttribute("academicYear", reportService.getAcademicYear());

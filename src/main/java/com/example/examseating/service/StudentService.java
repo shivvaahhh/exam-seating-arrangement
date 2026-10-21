@@ -10,6 +10,8 @@ import com.example.examseating.repository.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +23,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
     private final StudentRepository studentRepository;
     private final DepartmentRepository departmentRepository;
@@ -67,11 +72,11 @@ public class StudentService {
     }
 
     public Optional<Student> findByRegisterNumber(String registerNumber) {
-        return studentRepository.findByRegisterNumber(registerNumber);
+        return studentRepository.findByRegisterNumber(registerNumber != null ? registerNumber.trim().toUpperCase() : "");
     }
 
     public Optional<Student> findByUsername(String username) {
-        return studentRepository.findByUser_Username(username);
+        return studentRepository.findByUser_Username(username != null ? username.trim().toLowerCase() : "");
     }
 
     public List<StudentDto> findWithFilters(Long deptId, Integer semester, String keyword) {
@@ -79,6 +84,12 @@ public class StudentService {
         return studentRepository.findWithFilters(deptId, semester, cleanKeyword).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    public Page<StudentDto> findWithFiltersPaged(Long deptId, Integer semester, String keyword, Pageable pageable) {
+        String cleanKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : null;
+        return studentRepository.findWithFiltersPaged(deptId, semester, cleanKeyword, pageable)
+                .map(this::toDto);
     }
 
     @Transactional
@@ -96,17 +107,17 @@ public class StudentService {
         Department department = departmentRepository.findById(dto.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found with ID: " + dto.getDepartmentId()));
 
-        // Create associated User for login (username = lowercase regNo)
+        // Create associated User for login (username = lowercase regNo, initial password = lowercase regNo)
         String username = regNo.toLowerCase();
-        if (userRepository.existsByUsername(username)) {
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
             throw new DuplicateResourceException("User account with username '" + username + "' already exists.");
         }
 
         String rawPassword = (dto.getPassword() != null && !dto.getPassword().trim().isEmpty())
                 ? dto.getPassword().trim()
-                : "password123";
+                : username;
 
-        User user = new User(username, passwordEncoder.encode(rawPassword), email, "ROLE_STUDENT");
+        User user = new User(username, passwordEncoder.encode(rawPassword), email, "ROLE_STUDENT", true);
         user = userRepository.save(user);
 
         Student student = new Student();
@@ -150,7 +161,6 @@ public class StudentService {
         student.setAcademicYear(dto.getAcademicYear().trim());
         student.setStatus(dto.getStatus() != null ? dto.getStatus() : "ACTIVE");
 
-        // Also update linked User email / password if specified
         if (student.getUser() != null) {
             student.getUser().setEmail(email);
             if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
@@ -184,12 +194,57 @@ public class StudentService {
     }
 
     @Transactional
-    public int importFromCsv(MultipartFile file) throws Exception {
+    public String resetPassword(Long studentId) {
+        Student student = findEntityById(studentId);
+        if (student.getUser() == null) {
+            throw new IllegalStateException("No user account associated with student " + student.getRegisterNumber());
+        }
+        String defaultPass = student.getRegisterNumber().toLowerCase();
+        student.getUser().setPassword(passwordEncoder.encode(defaultPass));
+        student.getUser().setMustChangePassword(true);
+        userRepository.save(student.getUser());
+        return defaultPass;
+    }
+
+    @Transactional
+    public boolean toggleActive(Long studentId) {
+        Student student = findEntityById(studentId);
+        boolean newStatus = "ACTIVE".equalsIgnoreCase(student.getStatus()) ? false : true;
+        student.setStatus(newStatus ? "ACTIVE" : "INACTIVE");
+        if (student.getUser() != null) {
+            student.getUser().setActive(newStatus);
+            userRepository.save(student.getUser());
+        }
+        studentRepository.save(student);
+        return newStatus;
+    }
+
+    public static class CsvImportSummary {
+        private int totalRows = 0;
+        private int importedCount = 0;
+        private int duplicateRegCount = 0;
+        private int duplicateEmailCount = 0;
+        private int unknownDeptCount = 0;
+        private int invalidEmailCount = 0;
+        private List<String> messages = new ArrayList<>();
+
+        public int getTotalRows() { return totalRows; }
+        public int getImportedCount() { return importedCount; }
+        public int getDuplicateRegCount() { return duplicateRegCount; }
+        public int getDuplicateEmailCount() { return duplicateEmailCount; }
+        public int getUnknownDeptCount() { return unknownDeptCount; }
+        public int getInvalidEmailCount() { return invalidEmailCount; }
+        public List<String> getMessages() { return messages; }
+    }
+
+    @Transactional
+    public CsvImportSummary importFromCsvWithSummary(MultipartFile file) throws Exception {
         if (file.isEmpty()) {
             throw new IllegalArgumentException("The uploaded CSV file is empty.");
         }
 
-        int importedCount = 0;
+        CsvImportSummary summary = new CsvImportSummary();
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
              CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT
                      .builder()
@@ -200,41 +255,60 @@ public class StudentService {
                      .build())) {
 
             for (CSVRecord record : csvParser) {
-                // Expected columns: RegisterNumber, FullName, Email, PhoneNumber, DepartmentCode, Semester, AcademicYear
-                String regNo = record.get("RegisterNumber").trim().toUpperCase();
-                String fullName = record.get("FullName").trim();
-                String email = record.get("Email").trim().toLowerCase();
-                String phone = record.isSet("PhoneNumber") ? record.get("PhoneNumber").trim() : "";
-                String deptCode = record.get("DepartmentCode").trim().toUpperCase();
-                int semester = Integer.parseInt(record.get("Semester").trim());
-                String academicYear = record.get("AcademicYear").trim();
+                summary.totalRows++;
+                try {
+                    String regNo = record.get("RegisterNumber").trim().toUpperCase();
+                    String fullName = record.get("FullName").trim();
+                    String email = record.get("Email").trim().toLowerCase();
+                    String phone = record.isSet("PhoneNumber") ? record.get("PhoneNumber").trim() : "";
+                    String deptCode = record.get("DepartmentCode").trim().toUpperCase();
+                    int semester = Integer.parseInt(record.get("Semester").trim());
+                    String academicYear = record.get("AcademicYear").trim();
 
-                if (studentRepository.existsByRegisterNumber(regNo) || studentRepository.existsByEmail(email)) {
-                    continue; // Skip duplicates during batch import
+                    if (!EMAIL_PATTERN.matcher(email).matches()) {
+                        summary.invalidEmailCount++;
+                        summary.messages.add("Row " + summary.totalRows + ": Invalid email format for '" + email + "'");
+                        continue;
+                    }
+
+                    if (studentRepository.existsByRegisterNumber(regNo)) {
+                        summary.duplicateRegCount++;
+                        summary.messages.add("Row " + summary.totalRows + ": Skipped duplicate register number '" + regNo + "'");
+                        continue;
+                    }
+
+                    if (studentRepository.existsByEmail(email)) {
+                        summary.duplicateEmailCount++;
+                        summary.messages.add("Row " + summary.totalRows + ": Skipped duplicate email '" + email + "'");
+                        continue;
+                    }
+
+                    Department dept = departmentRepository.findByDepartmentCode(deptCode).orElse(null);
+                    if (dept == null) {
+                        summary.unknownDeptCount++;
+                        summary.messages.add("Row " + summary.totalRows + ": Unknown department code '" + deptCode + "' for student " + regNo);
+                        continue;
+                    }
+
+                    StudentDto dto = new StudentDto();
+                    dto.setRegisterNumber(regNo);
+                    dto.setFullName(fullName);
+                    dto.setEmail(email);
+                    dto.setPhoneNumber(phone);
+                    dto.setDepartmentId(dept.getId());
+                    dto.setSemester(semester);
+                    dto.setAcademicYear(academicYear);
+                    dto.setStatus("ACTIVE");
+                    dto.setPassword(regNo.toLowerCase()); // default password is register number
+
+                    create(dto);
+                    summary.importedCount++;
+                } catch (Exception ex) {
+                    summary.messages.add("Row " + summary.totalRows + ": Parse error: " + ex.getMessage());
                 }
-
-                Department dept = departmentRepository.findByDepartmentCode(deptCode)
-                        .orElse(null);
-                if (dept == null) {
-                    continue; // Skip if department not found
-                }
-
-                StudentDto dto = new StudentDto();
-                dto.setRegisterNumber(regNo);
-                dto.setFullName(fullName);
-                dto.setEmail(email);
-                dto.setPhoneNumber(phone);
-                dto.setDepartmentId(dept.getId());
-                dto.setSemester(semester);
-                dto.setAcademicYear(academicYear);
-                dto.setStatus("ACTIVE");
-                dto.setPassword("password123");
-
-                create(dto);
-                importedCount++;
             }
         }
-        return importedCount;
+        return summary;
     }
 
     public StudentDto toDto(Student student) {
@@ -249,6 +323,10 @@ public class StudentService {
         dto.setSemester(student.getSemester());
         dto.setAcademicYear(student.getAcademicYear());
         dto.setStatus(student.getStatus());
+        if (student.getUser() != null) {
+            dto.setUserId(student.getUser().getId());
+            dto.setActiveUser(student.getUser().isActive());
+        }
         return dto;
     }
 }

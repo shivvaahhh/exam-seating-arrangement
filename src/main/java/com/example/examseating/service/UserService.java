@@ -22,25 +22,35 @@ public class UserService {
     }
 
     public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsernameIgnoreCase(username);
+    }
+
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
     @Transactional
     public User createUser(String username, String rawPassword, String email, String role) {
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicateResourceException("Username '" + username + "' is already taken.");
+        return createUser(username, rawPassword, email, role, false);
+    }
+
+    @Transactional
+    public User createUser(String username, String rawPassword, String email, String role, boolean mustChangePassword) {
+        String normalizedUsername = username.trim().toLowerCase();
+        if (userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
+            throw new DuplicateResourceException("Username '" + normalizedUsername + "' is already taken.");
         }
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(email.trim().toLowerCase())) {
             throw new DuplicateResourceException("Email '" + email + "' is already registered.");
         }
 
-        User user = new User(username, passwordEncoder.encode(rawPassword), email, role);
+        User user = new User(normalizedUsername, passwordEncoder.encode(rawPassword), email.trim().toLowerCase(), role, mustChangePassword);
         return userRepository.save(user);
     }
 
     @Transactional
     public void changePassword(String username, String currentPassword, String newPassword) {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -48,6 +58,27 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(false);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void resetPassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setMustChangePassword(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean toggleUserActive(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        user.setActive(!user.isActive());
+        userRepository.save(user);
+        return user.isActive();
     }
 }

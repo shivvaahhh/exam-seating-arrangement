@@ -18,14 +18,39 @@ public class HallSeatGridDto {
 
     private Long examinationId;
     private String examinationName;
+    private String subjectCode;
     private String subjectName;
     private String examDate;
     private String examTime;
+    private String examSession;
 
-    // Grid: row by row, each row contains columns
+    // Grid: row by row, each row contains columns (for admin seating chart)
     private List<List<SeatCellDto>> grid = new ArrayList<>();
 
+    // Structured row list (for invigilator chart)
+    private List<RowDto> gridRows = new ArrayList<>();
+
     public HallSeatGridDto() {}
+
+    public static class RowDto {
+        private int rowNumber;
+        private String rowLetter;
+        private List<SeatCellDto> seats = new ArrayList<>();
+
+        public RowDto() {}
+
+        public RowDto(int rowNumber, String rowLetter) {
+            this.rowNumber = rowNumber;
+            this.rowLetter = rowLetter;
+        }
+
+        public int getRowNumber() { return rowNumber; }
+        public void setRowNumber(int rowNumber) { this.rowNumber = rowNumber; }
+        public String getRowLetter() { return rowLetter; }
+        public void setRowLetter(String rowLetter) { this.rowLetter = rowLetter; }
+        public List<SeatCellDto> getSeats() { return seats; }
+        public void setSeats(List<SeatCellDto> seats) { this.seats = seats; }
+    }
 
     public static class SeatCellDto {
         private int rowNumber;
@@ -34,10 +59,12 @@ public class HallSeatGridDto {
         private String seatNumber; // e.g. "A-01"
         private boolean isAvailableSeat = true; // whether within capacity
         private boolean isOccupied = false;
+        private String status = "EMPTY"; // EMPTY, OCCUPIED, UNAVAILABLE
         private Long studentId;
         private String registerNumber;
         private String studentName;
         private String departmentCode;
+        private Integer semester;
         private String attendanceStatus;
 
         public SeatCellDto() {}
@@ -51,16 +78,46 @@ public class HallSeatGridDto {
 
         public int getRowNumber() { return rowNumber; }
         public void setRowNumber(int rowNumber) { this.rowNumber = rowNumber; }
+        public int getRow() { return rowNumber; }
+        public void setRow(int row) { this.rowNumber = row; }
+
         public int getColumnNumber() { return columnNumber; }
         public void setColumnNumber(int columnNumber) { this.columnNumber = columnNumber; }
+        public int getColumn() { return columnNumber; }
+        public void setColumn(int column) { this.columnNumber = column; }
+
         public String getRowLetter() { return rowLetter; }
         public void setRowLetter(String rowLetter) { this.rowLetter = rowLetter; }
         public String getSeatNumber() { return seatNumber; }
         public void setSeatNumber(String seatNumber) { this.seatNumber = seatNumber; }
+
         public boolean isAvailableSeat() { return isAvailableSeat; }
-        public void setAvailableSeat(boolean availableSeat) { isAvailableSeat = availableSeat; }
+        public void setAvailableSeat(boolean availableSeat) {
+            isAvailableSeat = availableSeat;
+            if (!availableSeat) this.status = "UNAVAILABLE";
+        }
+
         public boolean isOccupied() { return isOccupied; }
-        public void setOccupied(boolean occupied) { isOccupied = occupied; }
+        public void setOccupied(boolean occupied) {
+            isOccupied = occupied;
+            if (occupied) this.status = "OCCUPIED";
+        }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) {
+            this.status = status;
+            if ("OCCUPIED".equalsIgnoreCase(status)) {
+                this.isOccupied = true;
+                this.isAvailableSeat = true;
+            } else if ("UNAVAILABLE".equalsIgnoreCase(status)) {
+                this.isOccupied = false;
+                this.isAvailableSeat = false;
+            } else {
+                this.isOccupied = false;
+                this.isAvailableSeat = true;
+            }
+        }
+
         public Long getStudentId() { return studentId; }
         public void setStudentId(Long studentId) { this.studentId = studentId; }
         public String getRegisterNumber() { return registerNumber; }
@@ -69,6 +126,8 @@ public class HallSeatGridDto {
         public void setStudentName(String studentName) { this.studentName = studentName; }
         public String getDepartmentCode() { return departmentCode; }
         public void setDepartmentCode(String departmentCode) { this.departmentCode = departmentCode; }
+        public Integer getSemester() { return semester; }
+        public void setSemester(Integer semester) { this.semester = semester; }
         public String getAttendanceStatus() { return attendanceStatus; }
         public void setAttendanceStatus(String attendanceStatus) { this.attendanceStatus = attendanceStatus; }
     }
@@ -84,26 +143,51 @@ public class HallSeatGridDto {
     public void setFloor(String floor) { this.floor = floor; }
     public String getRoomNumber() { return roomNumber; }
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
+
     public int getNumberOfRows() { return numberOfRows; }
     public void setNumberOfRows(int numberOfRows) { this.numberOfRows = numberOfRows; }
+    public int getRows() { return numberOfRows; }
+    public void setRows(int rows) { this.numberOfRows = rows; }
+
     public int getNumberOfColumns() { return numberOfColumns; }
     public void setNumberOfColumns(int numberOfColumns) { this.numberOfColumns = numberOfColumns; }
+    public int getColumns() { return numberOfColumns; }
+    public void setColumns(int columns) { this.numberOfColumns = columns; }
+
     public int getTotalCapacity() { return totalCapacity; }
     public void setTotalCapacity(int totalCapacity) { this.totalCapacity = totalCapacity; }
+
     public int getAllocatedSeatsCount() { return allocatedSeatsCount; }
     public void setAllocatedSeatsCount(int allocatedSeatsCount) { this.allocatedSeatsCount = allocatedSeatsCount; }
+    public int getAllocatedCount() { return allocatedSeatsCount; }
+    public void setAllocatedCount(int allocatedCount) { this.allocatedSeatsCount = allocatedCount; }
+
     public int getEmptySeatsCount() { return emptySeatsCount; }
     public void setEmptySeatsCount(int emptySeatsCount) { this.emptySeatsCount = emptySeatsCount; }
+
     public Long getExaminationId() { return examinationId; }
     public void setExaminationId(Long examinationId) { this.examinationId = examinationId; }
     public String getExaminationName() { return examinationName; }
     public void setExaminationName(String examinationName) { this.examinationName = examinationName; }
+
+    public String getSubjectCode() { return subjectCode; }
+    public void setSubjectCode(String subjectCode) { this.subjectCode = subjectCode; }
+
     public String getSubjectName() { return subjectName; }
     public void setSubjectName(String subjectName) { this.subjectName = subjectName; }
+
     public String getExamDate() { return examDate; }
     public void setExamDate(String examDate) { this.examDate = examDate; }
+
     public String getExamTime() { return examTime; }
     public void setExamTime(String examTime) { this.examTime = examTime; }
+
+    public String getExamSession() { return examSession; }
+    public void setExamSession(String examSession) { this.examSession = examSession; }
+
     public List<List<SeatCellDto>> getGrid() { return grid; }
     public void setGrid(List<List<SeatCellDto>> grid) { this.grid = grid; }
+
+    public List<RowDto> getGridRows() { return gridRows; }
+    public void setGridRows(List<RowDto> gridRows) { this.gridRows = gridRows; }
 }

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Invigilator Portal')}"></head>
+<body>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/layout :: invigilatorSidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <main class="col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('My Examination Duties')}"></div>
+
+            <div class="p-3 p-md-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Invigilator Greeting Profile Card -->
+                <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0b1f42 0%, #1e3a8a 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-20 p-3 rounded-circle text-white fs-2">
+                                    <i class="bi bi-person-workspace"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-bold m-0" th:text="${invigilator.name}">Dr. Ramesh Kumar</h4>
+                                    <div class="text-white-50 small mt-1">
+                                        <span class="me-3"><i class="bi bi-badge-ad me-1"></i> ID: <strong th:text="${invigilator.employeeId}">INV-001</strong></span>
+                                        <span class="me-3"><i class="bi bi-envelope me-1"></i> <span th:text="${invigilator.email}">ramesh@college.edu</span></span>
+                                        <span><i class="bi bi-building me-1"></i> <span th:text="${invigilator.department != null ? invigilator.department.departmentName : 'All Departments'}">CSE</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-success bg-opacity-25 text-white border border-success px-3 py-2 fs-6">
+                                    <i class="bi bi-shield-check me-1"></i> Active Invigilator
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Duties Section -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold m-0 text-dark"><i class="bi bi-calendar-check me-2 text-primary"></i> Scheduled Examination Duties</h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill"
+                              th:text="${duties.size() + ' Total Duty Assignment(s)'}">0 Duties</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Session</th>
+                                        <th>Examination & Subject</th>
+                                        <th>Assigned Hall</th>
+                                        <th>Building & Room</th>
+                                        <th>Reporting Time</th>
+                                        <th class="text-end">Hall Operations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(duties)}">
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
+                                            You currently have no scheduled examination invigilation duties assigned.
+                                        </td>
+                                    </tr>
+                                    <tr th:each="d : ${duties}">
+                                        <td>
+                                            <div class="fw-bold text-dark" th:text="${d.examination.examinationDate}">2026-10-25</div>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"
+                                                  th:text="${d.examination.session}">FORENOON</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark" th:text="${d.examination.examinationName}">Final Exam</div>
+                                            <small class="text-muted" th:text="${d.examination.subject.subjectCode + ' - ' + d.examination.subject.subjectName}">CS601 - DBMS</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-primary" th:text="${d.examinationHall.hallName}">Main Hall A</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-secondary border"
+                                                  th:text="${d.examinationHall.roomNumber + ' (' + d.examinationHall.buildingName + ')'}">AB1-G01</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted small">
+                                                <i class="bi bi-clock me-1"></i>
+                                                <span th:text="${d.examination.startTime + ' - ' + d.examination.endTime}">09:30 - 12:30</span>
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <a th:href="@{'/invigilator/duty/' + ${d.id} + '/chart'}" class="btn btn-outline-primary" title="View 2D Seating Chart">
+                                                    <i class="bi bi-grid-3x3 me-1"></i> Seating Grid
+                                                </a>
+                                                <a th:href="@{'/invigilator/duty/' + ${d.id} + '/attendance'}" class="btn btn-primary" title="Attendance Sheet">
+                                                    <i class="bi bi-printer-fill me-1"></i> Attendance Sheet
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

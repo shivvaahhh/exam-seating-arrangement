@@ -39,6 +39,9 @@ public class StudentDto {
     // Optional initial password when creating new student
     private String password;
 
+    private Long userId;
+    private boolean activeUser = true;
+
     public StudentDto() {}
 
     // Getters and Setters
@@ -128,5 +131,21 @@ public class StudentDto {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public boolean isActiveUser() {
+        return activeUser;
+    }
+
+    public void setActiveUser(boolean activeUser) {
+        this.activeUser = activeUser;
     }
 }

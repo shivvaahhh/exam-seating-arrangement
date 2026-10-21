@@ -33,8 +33,19 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
                                   @Param("semester") Integer semester,
                                   @Param("keyword") String keyword);
 
+    @Query("SELECT s FROM Student s WHERE " +
+           "(:deptId IS NULL OR s.department.id = :deptId) AND " +
+           "(:semester IS NULL OR s.semester = :semester) AND " +
+           "(:keyword IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           " LOWER(s.registerNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<Student> findWithFiltersPaged(@Param("deptId") Long deptId,
+                                                                       @Param("semester") Integer semester,
+                                                                       @Param("keyword") String keyword,
+                                                                       org.springframework.data.domain.Pageable pageable);
+
     @Query("SELECT s.department.departmentName, COUNT(s) FROM Student s GROUP BY s.department.departmentName")
     List<Object[]> countStudentsByDepartment();
 
+    long countByDepartmentIdAndSemesterAndStatus(Long departmentId, Integer semester, String status);
     long countByStatus(String status);
 }

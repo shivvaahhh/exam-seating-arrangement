@@ -7,6 +7,9 @@ import com.example.examseating.service.SeatAllocationService;
 import com.example.examseating.service.StudentService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,9 +40,19 @@ public class AdminStudentController {
     public String list(@RequestParam(value = "deptId", required = false) Long deptId,
                        @RequestParam(value = "semester", required = false) Integer semester,
                        @RequestParam(value = "keyword", required = false) String keyword,
+                       @RequestParam(value = "page", defaultValue = "0") int page,
+                       @RequestParam(value = "size", defaultValue = "15") int size,
                        Model model) {
-        List<StudentDto> students = studentService.findWithFilters(deptId, semester, keyword);
-        model.addAttribute("students", students);
+        Page<StudentDto> studentPage = studentService.findWithFiltersPaged(
+                deptId, semester, keyword,
+                PageRequest.of(page, size, Sort.by("registerNumber").ascending())
+        );
+
+        model.addAttribute("studentPage", studentPage);
+        model.addAttribute("students", studentPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", studentPage.getTotalPages());
+        model.addAttribute("totalItems", studentPage.getTotalElements());
         model.addAttribute("departments", departmentService.findAll());
         model.addAttribute("selectedDeptId", deptId);
         model.addAttribute("selectedSemester", semester);
@@ -71,8 +84,13 @@ public class AdminStudentController {
 
         try {
             if (dto.getId() == null) {
-                studentService.create(dto);
-                redirectAttributes.addFlashAttribute("successMessage", "Student created successfully! Default login credentials generated.");
+                StudentDto created = studentService.create(dto);
+                redirectAttributes.addFlashAttribute(
+                        "successMessage",
+                        "Student '" + created.getFullName() + "' created! Username: '" +
+                        created.getRegisterNumber().toLowerCase() + "', Initial Password: '" +
+                        created.getRegisterNumber().toLowerCase() + "' (Must change on first login)."
+                );
             } else {
                 studentService.update(dto.getId(), dto);
                 redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
@@ -116,6 +134,30 @@ public class AdminStudentController {
         return "redirect:/admin/students";
     }
 
+    @PostMapping("/{id}/reset-password")
+    public String resetPassword(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            String defaultPass = studentService.resetPassword(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Password reset to default (register number: '" + defaultPass + "'). Student must change it upon next login.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/students";
+    }
+
+    @PostMapping("/{id}/toggle-active")
+    public String toggleActive(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            boolean active = studentService.toggleActive(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Student account " + (active ? "activated" : "deactivated") + " successfully.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/students";
+    }
+
     @GetMapping("/import")
     public String showImportPage() {
         return "admin/students/import";
@@ -129,8 +171,17 @@ public class AdminStudentController {
         }
 
         try {
-            int imported = studentService.importFromCsv(file);
-            redirectAttributes.addFlashAttribute("successMessage", "Successfully imported " + imported + " student(s) from CSV!");
+            StudentService.CsvImportSummary summary = studentService.importFromCsvWithSummary(file);
+            String message = "Import completed! Successfully imported " + summary.getImportedCount() + " of " +
+                    summary.getTotalRows() + " rows. (Duplicates skipped: " +
+                    (summary.getDuplicateRegCount() + summary.getDuplicateEmailCount()) +
+                    ", Unknown Depts: " + summary.getUnknownDeptCount() +
+                    ", Invalid Emails: " + summary.getInvalidEmailCount() + ").";
+
+            redirectAttributes.addFlashAttribute("successMessage", message);
+            if (!summary.getMessages().isEmpty()) {
+                redirectAttributes.addFlashAttribute("warningMessage", String.join("; ", summary.getMessages()));
+            }
             return "redirect:/admin/students";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "CSV Import Error: " + ex.getMessage());

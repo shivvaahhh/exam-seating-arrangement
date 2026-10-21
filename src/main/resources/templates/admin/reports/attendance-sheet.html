@@ -139,6 +139,15 @@
             <span th:if="${selectedHall == null}">All Allocated Halls</span>
         </td>
     </tr>
+    <tr>
+        <td><strong>Assigned Invigilator(s):</strong></td>
+        <td colspan="3">
+            <span th:if="${duties != null and !#lists.isEmpty(duties)}">
+                <span th:each="d, dStat : ${duties}" th:text="${d.invigilator.name + ' (' + d.examinationHall.hallName + ')' + (!dStat.last ? ', ' : '')}">Dr. Ramesh</span>
+            </span>
+            <span th:if="${duties == null or #lists.isEmpty(duties)}" class="text-muted">None Assigned</span>
+        </td>
+    </tr>
 </table>
 
 <!-- Candidate Table with Signature Column -->

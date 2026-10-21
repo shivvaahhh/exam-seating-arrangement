@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Invigilator Attendance Sheet')}"></head>
+<body>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/layout :: invigilatorSidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <main class="col-lg-10 p-0">
+            <div th:replace="~{fragments/layout :: topNavbar('Official Attendance Sheet')}"></div>
+
+            <div class="p-3 p-md-4">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+
+                <!-- Print & Back Actions -->
+                <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+                    <a th:href="@{/invigilator/dashboard}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Duties
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary btn-sm">
+                        <i class="bi bi-printer-fill me-1"></i> Print Attendance Sheet
+                    </button>
+                </div>
+
+                <!-- Official Attendance Document -->
+                <div class="card border shadow-sm p-4 bg-white" style="border-radius: 10px;">
+                    <!-- Formal Institution Header -->
+                    <div class="text-center pb-3 mb-3 border-bottom border-dark">
+                        <h4 class="fw-bold m-0 text-dark" th:text="${institutionName}">GOVERNMENT ENGINEERING COLLEGE</h4>
+                        <div class="text-uppercase small fw-semibold text-secondary" th:text="${institutionTagline}">Controller of Examinations - Autonomous System</div>
+                        <h5 class="fw-bold mt-2 text-primary">INVIGILATOR EXAMINATION ATTENDANCE ROSTER</h5>
+                        <div class="badge bg-dark px-3 py-1 text-uppercase" th:text="'Academic Year ' + ${academicYear}">2026-2027</div>
+                    </div>
+
+                    <!-- Meta Information Box -->
+                    <div class="row g-2 mb-3 small p-2 bg-light border rounded">
+                        <div class="col-6 col-md-4">
+                            <strong>Examination:</strong> <span th:text="${assignment.examination.examinationName}">DBMS Final</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <strong>Subject:</strong> <span th:text="${assignment.examination.subject.subjectCode + ' - ' + assignment.examination.subject.subjectName}">CS601</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <strong>Date / Session:</strong> <span th:text="${assignment.examination.examinationDate + ' (' + assignment.examination.session + ')'}">2026-10-25</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <strong>Exam Hall:</strong> <span th:text="${assignment.examinationHall.hallName}">Main Hall A</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <strong>Room / Building:</strong> <span th:text="${assignment.examinationHall.roomNumber + ' / ' + assignment.examinationHall.buildingName}">AB1-G01</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <strong>Invigilator:</strong> <strong class="text-dark" th:text="${invigilator.name}">Dr. Ramesh</strong>
+                        </div>
+                    </div>
+
+                    <!-- Candidates Attendance Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead class="table-light text-center">
+                                <tr>
+                                    <th style="width: 50px;">SL No</th>
+                                    <th style="width: 140px;">Register No</th>
+                                    <th>Candidate Name</th>
+                                    <th style="width: 80px;">Dept</th>
+                                    <th style="width: 90px;">Seat No</th>
+                                    <th style="width: 180px;">Candidate Signature</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(allocations)}">
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No student seat allocations found for this examination hall.
+                                    </td>
+                                </tr>
+                                <tr th:each="sa, iter : ${allocations}">
+                                    <td class="text-center" th:text="${iter.count}">1</td>
+                                    <td class="font-monospace fw-bold" th:text="${sa.student.registerNumber}">2024CSE001</td>
+                                    <td class="fw-semibold" th:text="${sa.student.fullName}">Aarav Sharma</td>
+                                    <td class="text-center" th:text="${sa.student.department.departmentCode}">CSE</td>
+                                    <td class="text-center fw-bold text-primary font-monospace" th:text="${sa.seatNumber}">A-01</td>
+                                    <td style="height: 40px;"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Invigilator Summary & Sign-off Block -->
+                    <div class="row mt-4 pt-3 border-top g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="p-2 border rounded bg-light small">
+                                <strong>Attendance Summary:</strong><br>
+                                Total Candidates Allotted: <strong th:text="${allocations.size()}">15</strong> |
+                                Present: [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ] |
+                                Absent: [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 text-end">
+                            <div style="margin-top: 25px;">
+                                <div class="fw-bold" th:text="${invigilator.name}">Dr. Ramesh</div>
+                                <div class="text-muted small">Invigilator / Hall Proctor Signature</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

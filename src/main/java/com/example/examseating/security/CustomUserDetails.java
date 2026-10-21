@@ -20,6 +20,14 @@ public class CustomUserDetails implements UserDetails {
         return user;
     }
 
+    public Long getId() {
+        return user.getId();
+    }
+
+    public boolean isMustChangePassword() {
+        return user.isMustChangePassword();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(user.getRole()));
@@ -52,6 +60,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.isEnabled();
+        return user.isActive();
     }
 }

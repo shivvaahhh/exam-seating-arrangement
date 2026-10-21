@@ -95,4 +95,6 @@ public class AllocationResultDto {
     public void setMessage(String message) { this.message = message; }
     public List<HallSummaryDto> getHallSummaries() { return hallSummaries; }
     public void setHallSummaries(List<HallSummaryDto> hallSummaries) { this.hallSummaries = hallSummaries; }
+    public List<HallSummaryDto> getHalls() { return hallSummaries; }
+    public void setHalls(List<HallSummaryDto> halls) { this.hallSummaries = halls; }
 }

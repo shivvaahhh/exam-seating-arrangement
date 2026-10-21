@@ -18,6 +18,7 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Sidebar styling */
@@ -25,7 +26,8 @@ body {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-text);
     min-height: 100vh;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 1040;
 }
 
 .sidebar .brand-title {
@@ -42,6 +44,9 @@ body {
     padding: 0.65rem 1rem;
     border-radius: 6px;
     margin-bottom: 2px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
     transition: all 0.2s ease;
 }
 
@@ -53,6 +58,7 @@ body {
 .sidebar .nav-link.active {
     background-color: var(--primary-blue);
     color: #ffffff;
+    box-shadow: 0 2px 4px rgba(29, 78, 216, 0.3);
 }
 
 .sidebar .sidebar-heading {
@@ -66,11 +72,53 @@ body {
     font-weight: 700;
 }
 
+/* Offcanvas mobile drawer */
+.offcanvas.sidebar {
+    width: 280px;
+    background-color: var(--sidebar-bg);
+}
+
 /* Top Navbar */
 .top-navbar {
     background-color: #ffffff;
     border-bottom: 1px solid var(--card-border);
     padding: 0.75rem 1.5rem;
+    z-index: 1020;
+}
+
+/* Layout offsets */
+@media (min-width: 992px) {
+    main.col-lg-10 {
+        margin-left: 16.666667% !important;
+        width: 83.333333% !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    main.col-lg-10 {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .top-navbar {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Touch targets */
+.btn {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 767.98px) {
+    .btn {
+        min-height: 44px;
+    }
+    .btn-sm {
+        min-height: 38px;
+    }
 }
 
 /* Cards & Statistics */
@@ -120,11 +168,18 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-top: none;
+    white-space: nowrap;
 }
 
 .table td {
     vertical-align: middle;
     font-size: 0.92rem;
+}
+
+.table-responsive {
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: #ffffff;
 }
 
 /* Seating Grid visual layout */
@@ -134,6 +189,7 @@ body {
     border-radius: 12px;
     padding: 24px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .seat-podium {
@@ -162,7 +218,7 @@ body {
     font-weight: 600;
     text-align: center;
     padding: 2px;
-    cursor: default;
+    cursor: pointer;
     transition: all 0.2s ease;
     border: 2px solid transparent;
 }
@@ -176,6 +232,37 @@ body {
 .seat-occupied:hover {
     background-color: #bfdbfe;
     transform: scale(1.05);
+}
+
+/* Department color variations for visual distinction */
+.seat-dept-cse {
+    background-color: #e0f2fe;
+    border-color: #0284c7;
+    color: #0369a1;
+}
+
+.seat-dept-it {
+    background-color: #dcfce7;
+    border-color: #16a34a;
+    color: #15803d;
+}
+
+.seat-dept-ece {
+    background-color: #f3e8ff;
+    border-color: #9333ea;
+    color: #7e22ce;
+}
+
+.seat-dept-mech {
+    background-color: #fef3c7;
+    border-color: #d97706;
+    color: #b45309;
+}
+
+.seat-dept-civil {
+    background-color: #ccfbf1;
+    border-color: #0d9488;
+    color: #0f766e;
 }
 
 .seat-empty {
@@ -205,9 +292,22 @@ body {
     border-radius: 4px;
 }
 
+/* Mobile responsive enhancements */
+@media (max-width: 575.98px) {
+    .seat-cell {
+        width: 58px;
+        height: 58px;
+        font-size: 0.68rem;
+        margin: 2px;
+    }
+    .stat-card {
+        padding: 1rem !important;
+    }
+}
+
 /* Print CSS */
 @media print {
-    .no-print, .sidebar, .top-navbar, .btn, .breadcrumb, form.search-box, .modal {
+    .no-print, .sidebar, .sidebar-wrapper, .top-navbar, .btn, .breadcrumb, form.search-box, .modal, .offcanvas {
         display: none !important;
     }
 
@@ -217,7 +317,7 @@ body {
         font-size: 11pt;
     }
 
-    .main-content {
+    main, main.col-lg-10 {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;

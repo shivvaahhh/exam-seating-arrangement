@@ -32,6 +32,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ExaminationRegistrationRepository registrationRepository;
     private final SeatAllocationRepository allocationRepository;
     private final SeatAllocationService allocationService;
+    private final InvigilatorRepository invigilatorRepository;
+    private final InvigilatorAssignmentRepository assignmentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.security.default-admin.username:admin}")
@@ -52,6 +54,8 @@ public class DataInitializer implements CommandLineRunner {
                            ExaminationRegistrationRepository registrationRepository,
                            SeatAllocationRepository allocationRepository,
                            SeatAllocationService allocationService,
+                           InvigilatorRepository invigilatorRepository,
+                           InvigilatorAssignmentRepository assignmentRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
@@ -62,6 +66,8 @@ public class DataInitializer implements CommandLineRunner {
         this.registrationRepository = registrationRepository;
         this.allocationRepository = allocationRepository;
         this.allocationService = allocationService;
+        this.invigilatorRepository = invigilatorRepository;
+        this.assignmentRepository = assignmentRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -71,7 +77,7 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Checking system data initialization...");
 
         // 1. Create Default Administrator
-        if (!userRepository.existsByUsername(adminUsername)) {
+        if (!userRepository.existsByUsernameIgnoreCase(adminUsername)) {
             User admin = new User(adminUsername, passwordEncoder.encode(adminPassword), adminEmail, "ROLE_ADMIN");
             userRepository.save(admin);
             log.info("Initialized default administrator: {}", adminUsername);
@@ -143,7 +149,7 @@ public class DataInitializer implements CommandLineRunner {
                 String email = reg.toLowerCase() + "@college.edu";
                 String username = reg.toLowerCase();
 
-                User user = new User(username, passwordEncoder.encode("password123"), email, "ROLE_STUDENT");
+                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", true);
                 user = userRepository.save(user);
 
                 Student s = new Student();
@@ -166,7 +172,7 @@ public class DataInitializer implements CommandLineRunner {
                 String email = reg.toLowerCase() + "@college.edu";
                 String username = reg.toLowerCase();
 
-                User user = new User(username, passwordEncoder.encode("password123"), email, "ROLE_STUDENT");
+                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", true);
                 user = userRepository.save(user);
 
                 Student s = new Student();
@@ -182,20 +188,37 @@ public class DataInitializer implements CommandLineRunner {
                 sampleStudents.add(studentRepository.save(s));
             }
 
-            // Also create a demo student account with easy username "student" / "student123" linked to the first student
-            if (!sampleStudents.isEmpty()) {
-                Student firstStudent = sampleStudents.get(0);
-                User demoUser = new User("student", passwordEncoder.encode("student123"), "student.demo@college.edu", "ROLE_STUDENT");
-                demoUser = userRepository.save(demoUser);
-                firstStudent.setUser(demoUser);
-                studentRepository.save(firstStudent);
-                log.info("Created demo student login: username='student', password='student123' (linked to {})", firstStudent.getRegisterNumber());
-            }
-
-            log.info("Initialized 25 sample students with individual logins (password: 'password123').");
+            log.info("Initialized 25 sample students with individual logins (username=regno, initial password=regno).");
         }
 
-        // 6. Initialize Examinations if empty
+        // 6. Initialize Invigilators if empty
+        Invigilator inv1 = null, inv2 = null;
+        if (invigilatorRepository.count() == 0 && cse != null && it != null && ece != null) {
+            // Invigilator 1
+            User u1 = new User("ramesh.sharma@college.edu", passwordEncoder.encode("invigilator123"), "ramesh.sharma@college.edu", "ROLE_INVIGILATOR", true);
+            u1 = userRepository.save(u1);
+            inv1 = new Invigilator("INV-001", "Dr. Ramesh Sharma", "ramesh.sharma@college.edu", "9876543201", cse);
+            inv1.setUser(u1);
+            inv1 = invigilatorRepository.save(inv1);
+
+            // Invigilator 2
+            User u2 = new User("priya.patel@college.edu", passwordEncoder.encode("invigilator123"), "priya.patel@college.edu", "ROLE_INVIGILATOR", true);
+            u2 = userRepository.save(u2);
+            inv2 = new Invigilator("INV-002", "Prof. Priya Patel", "priya.patel@college.edu", "9876543202", it);
+            inv2.setUser(u2);
+            inv2 = invigilatorRepository.save(inv2);
+
+            // Invigilator 3
+            User u3 = new User("anand.reddy@college.edu", passwordEncoder.encode("invigilator123"), "anand.reddy@college.edu", "ROLE_INVIGILATOR", true);
+            u3 = userRepository.save(u3);
+            Invigilator inv3 = new Invigilator("INV-003", "Dr. Anand Reddy", "anand.reddy@college.edu", "9876543203", ece);
+            inv3.setUser(u3);
+            invigilatorRepository.save(inv3);
+
+            log.info("Initialized 3 faculty invigilators with credentials (password: 'invigilator123').");
+        }
+
+        // 7. Initialize Examinations if empty
         if (examinationRepository.count() == 0 && subDbms != null && cse != null && subWeb != null && it != null) {
             LocalDate tomorrow = LocalDate.now().plusDays(2);
             LocalDate nextWeek = LocalDate.now().plusDays(7);
@@ -226,10 +249,11 @@ public class DataInitializer implements CommandLineRunner {
                     "AFTERNOON"
             );
             exam2.setStatus("SCHEDULED");
-            examinationRepository.save(exam2);
+            exam2 = examinationRepository.save(exam2);
 
+            Examination exam3 = null;
             if (subNetworks != null) {
-                Examination exam3 = new Examination(
+                exam3 = new Examination(
                         "B.Tech Semester VI Final: Computer Networks",
                         subNetworks,
                         cse,
@@ -241,19 +265,42 @@ public class DataInitializer implements CommandLineRunner {
                         "FORENOON"
                 );
                 exam3.setStatus("SCHEDULED");
-                examinationRepository.save(exam3);
+                exam3 = examinationRepository.save(exam3);
             }
 
             log.info("Initialized scheduled examinations.");
 
-            // Register CSE students for exam 1
+            // Register CSE students for Exam 1
             List<Student> cseStudents = studentRepository.findByDepartmentIdAndSemester(cse.getId(), 6);
             for (Student s : cseStudents) {
                 registrationRepository.save(new ExaminationRegistration(exam1, s));
             }
-            log.info("Registered {} students for exam: {}", cseStudents.size(), exam1.getExaminationName());
 
-            // Run initial automatic seat allocation for exam 1 so that the app immediately has live allocation data!
+            // Register IT students for Exam 2 (Fixes 0 Candidates issue!)
+            List<Student> itStudents = studentRepository.findByDepartmentIdAndSemester(it.getId(), 6);
+            for (Student s : itStudents) {
+                registrationRepository.save(new ExaminationRegistration(exam2, s));
+            }
+            log.info("Registered {} IT students for exam: {}", itStudents.size(), exam2.getExaminationName());
+
+            // Register CSE students for Exam 3 (Fixes 0 Candidates issue!)
+            if (exam3 != null) {
+                for (Student s : cseStudents) {
+                    registrationRepository.save(new ExaminationRegistration(exam3, s));
+                }
+                log.info("Registered {} CSE students for exam: {}", cseStudents.size(), exam3.getExaminationName());
+            }
+
+            // Assign invigilators to Exam 1 halls
+            if (inv1 != null && hallA != null) {
+                assignmentRepository.save(new InvigilatorAssignment(exam1, hallA, inv1));
+            }
+            if (inv2 != null && hallB != null) {
+                assignmentRepository.save(new InvigilatorAssignment(exam1, hallB, inv2));
+            }
+            log.info("Assigned proctors Dr. Ramesh and Prof. Priya to Exam 1 halls.");
+
+            // Run initial automatic seat allocation for exam 1
             if (hallA != null && hallB != null) {
                 try {
                     AllocationRequestDto allocReq = new AllocationRequestDto();

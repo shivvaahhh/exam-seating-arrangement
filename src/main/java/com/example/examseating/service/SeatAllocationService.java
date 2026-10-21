@@ -23,15 +23,18 @@ public class SeatAllocationService {
     private final ExaminationHallRepository hallRepository;
     private final ExaminationRegistrationRepository registrationRepository;
     private final SeatAllocationRepository allocationRepository;
+    private final StudentRepository studentRepository;
 
     public SeatAllocationService(ExaminationRepository examinationRepository,
                                  ExaminationHallRepository hallRepository,
                                  ExaminationRegistrationRepository registrationRepository,
-                                 SeatAllocationRepository allocationRepository) {
+                                 SeatAllocationRepository allocationRepository,
+                                 StudentRepository studentRepository) {
         this.examinationRepository = examinationRepository;
         this.hallRepository = hallRepository;
         this.registrationRepository = registrationRepository;
         this.allocationRepository = allocationRepository;
+        this.studentRepository = studentRepository;
     }
 
     /**
@@ -66,8 +69,22 @@ public class SeatAllocationService {
         // Step 1: Retrieve eligible students registered for the exam
         List<ExaminationRegistration> registrations = registrationRepository.findByExaminationId(examId);
         if (registrations.isEmpty()) {
-            throw new AllocationException("No eligible students are registered for examination: " + exam.getExaminationName() +
-                    ". Please add eligible students first.");
+            // Auto-populate eligible candidates from enrolled students for department + semester
+            List<Student> enrolledStudents = studentRepository.findByDepartmentIdAndSemester(
+                    exam.getDepartment().getId(), exam.getSemester()
+            ).stream()
+             .filter(s -> "ACTIVE".equalsIgnoreCase(s.getStatus()))
+             .collect(Collectors.toList());
+
+            if (enrolledStudents.isEmpty()) {
+                throw new AllocationException("No active students found in " + exam.getDepartment().getDepartmentName() +
+                        " Semester " + exam.getSemester() + " to register for this examination.");
+            }
+
+            for (Student s : enrolledStudents) {
+                ExaminationRegistration reg = new ExaminationRegistration(exam, s);
+                registrations.add(registrationRepository.save(reg));
+            }
         }
 
         int eligibleStudentCount = registrations.size();
@@ -92,12 +109,12 @@ public class SeatAllocationService {
                 .mapToInt(ExaminationHall::getEffectiveCapacity)
                 .sum();
 
-        // Step 4: Validate capacity. If insufficient, NEVER partially allocate silently!
+        // Step 4: Validate capacity BEFORE allocating. Show exact shortfall and block if insufficient!
         if (eligibleStudentCount > totalAvailableSeats) {
             throw new InsufficientCapacityException(eligibleStudentCount, totalAvailableSeats);
         }
 
-        // Step 5: Sort students deterministically based on sorting strategy
+        // Step 5: Prepare student list with Round-Robin interleaving across departments
         List<Student> students = registrations.stream()
                 .map(ExaminationRegistration::getStudent)
                 .collect(Collectors.toList());
@@ -105,14 +122,41 @@ public class SeatAllocationService {
         if ("REGNO_ONLY".equalsIgnoreCase(request.getSortStrategy())) {
             students.sort(Comparator.comparing(Student::getRegisterNumber));
         } else {
-            // Default "DEPT_REGNO": Sort by Department Name, Semester, then Register Number
-            students.sort(Comparator
-                    .comparing((Student s) -> s.getDepartment().getDepartmentName())
-                    .thenComparing(Student::getSemester)
-                    .thenComparing(Student::getRegisterNumber));
+            // Group students by department
+            Map<Long, List<Student>> deptBuckets = new LinkedHashMap<>();
+            for (Student s : students) {
+                Long deptId = s.getDepartment() != null ? s.getDepartment().getId() : 0L;
+                deptBuckets.computeIfAbsent(deptId, k -> new ArrayList<>()).add(s);
+            }
+
+            // Sort within each department bucket by register number
+            for (List<Student> bucket : deptBuckets.values()) {
+                bucket.sort(Comparator.comparing(Student::getRegisterNumber));
+            }
+
+            // If students are from multiple departments, interleave them round-robin
+            // so adjacent seats (left/right/front/back) do not have same department students!
+            if (deptBuckets.size() > 1) {
+                List<Student> interleaved = new ArrayList<>();
+                boolean hasMore = true;
+                int round = 0;
+                while (hasMore) {
+                    hasMore = false;
+                    for (List<Student> bucket : deptBuckets.values()) {
+                        if (round < bucket.size()) {
+                            interleaved.add(bucket.get(round));
+                            hasMore = true;
+                        }
+                    }
+                    round++;
+                }
+                students = interleaved;
+            } else {
+                students.sort(Comparator.comparing(Student::getRegisterNumber));
+            }
         }
 
-        // Step 6 & 7: Distribute students across available halls respecting capacities and row/col positions
+        // Step 6 & 7: Distribute students across available halls respecting capacities, row/col positions and clashes
         List<SeatAllocation> createdAllocations = new ArrayList<>();
         List<AllocationResultDto.HallSummaryDto> hallSummaries = new ArrayList<>();
 
@@ -145,6 +189,29 @@ public class SeatAllocationService {
                         throw new AllocationException("Duplicate seat allocation attempt detected for " +
                                 hall.getHallName() + " / " + seatNumber);
                     }
+
+                    // Clash Check 1: Check if this physical seat in this hall is already booked by another exam on the same date + session
+                    List<SeatAllocation> seatClashes = allocationRepository.findClashingSeatAllocations(
+                            hall.getId(), seatNumber, exam.getExaminationDate(), exam.getSession(), exam.getId()
+                    );
+                    if (!seatClashes.isEmpty()) {
+                        throw new AllocationException("Seat conflict: Hall '" + hall.getHallName() + "' Seat '" + seatNumber +
+                                "' is already booked for another examination ('" +
+                                seatClashes.get(0).getExamination().getExaminationName() + "') on " +
+                                exam.getExaminationDate() + " (" + exam.getSession() + ").");
+                    }
+
+                    // Clash Check 2: Check if this student is already allocated in another exam on the same date + session
+                    List<SeatAllocation> studentClashes = allocationRepository.findClashingStudentAllocations(
+                            currentStudent.getId(), exam.getExaminationDate(), exam.getSession(), exam.getId()
+                    );
+                    if (!studentClashes.isEmpty()) {
+                        throw new AllocationException("Student conflict: Student " + currentStudent.getRegisterNumber() +
+                                " (" + currentStudent.getFullName() + ") is already allocated to seat in another exam ('" +
+                                studentClashes.get(0).getExamination().getExaminationName() + "') on " +
+                                exam.getExaminationDate() + " (" + exam.getSession() + ").");
+                    }
+
                     assignedSeatTracker.add(globalSeatKey);
 
                     SeatAllocation allocation = new SeatAllocation(
@@ -198,35 +265,14 @@ public class SeatAllocationService {
         result.setTotalAvailableSeats(totalAvailableSeats);
         result.setUnallocatedStudents(eligibleStudentCount - createdAllocations.size());
         result.setAllocationStatus("CONFIRMED");
-        result.setSuccess(true);
-        result.setMessage("Seating arrangement generated successfully for " + createdAllocations.size() +
-                " student(s) across " + hallSummaries.size() + " examination hall(s).");
-        result.setHallSummaries(hallSummaries);
+        result.setHalls(hallSummaries);
 
         return result;
     }
 
     /**
-     * Clears all seat allocations for an examination and resets registration status.
+     * Builds a 2D matrix model representing the hall layout for visual inspection.
      */
-    @Transactional
-    public void clearAllocations(Long examId) {
-        Examination exam = examinationRepository.findById(examId)
-                .orElseThrow(() -> new ResourceNotFoundException("Examination not found with ID: " + examId));
-
-        allocationRepository.deleteByExaminationId(examId);
-        registrationRepository.updateAllocationStatusByExaminationId(examId, false);
-
-        if (!"CANCELLED".equalsIgnoreCase(exam.getStatus())) {
-            exam.setStatus("SCHEDULED");
-            examinationRepository.save(exam);
-        }
-    }
-
-    /**
-     * Constructs a 2D Hall Seat Grid layout for visual display and printing.
-     */
-    @Transactional(readOnly = true)
     public HallSeatGridDto getHallSeatGrid(Long examId, Long hallId) {
         Examination exam = examinationRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Examination not found with ID: " + examId));
@@ -237,103 +283,109 @@ public class SeatAllocationService {
         List<SeatAllocation> allocations = allocationRepository
                 .findByExaminationIdAndExaminationHallIdOrderByRowNumberAscColumnNumberAsc(examId, hallId);
 
-        // Map (row, col) to SeatAllocation
-        Map<String, SeatAllocation> posMap = new HashMap<>();
-        for (SeatAllocation sa : allocations) {
-            posMap.put(sa.getRowNumber() + "_" + sa.getColumnNumber(), sa);
+        Map<String, SeatAllocation> seatMap = new HashMap<>();
+        for (SeatAllocation a : allocations) {
+            seatMap.put(a.getRowNumber() + "_" + a.getColumnNumber(), a);
         }
 
-        HallSeatGridDto gridDto = new HallSeatGridDto();
-        gridDto.setHallId(hall.getId());
-        gridDto.setHallName(hall.getHallName());
-        gridDto.setBuildingName(hall.getBuildingName());
-        gridDto.setFloor(hall.getFloor());
-        gridDto.setRoomNumber(hall.getRoomNumber());
-        gridDto.setNumberOfRows(hall.getNumberOfRows());
-        gridDto.setNumberOfColumns(hall.getNumberOfColumns());
-        gridDto.setTotalCapacity(hall.getTotalCapacity());
-        gridDto.setAllocatedSeatsCount(allocations.size());
-        gridDto.setEmptySeatsCount(Math.max(0, hall.getEffectiveCapacity() - allocations.size()));
+        HallSeatGridDto grid = new HallSeatGridDto();
+        grid.setHallId(hall.getId());
+        grid.setHallName(hall.getHallName());
+        grid.setBuildingName(hall.getBuildingName());
+        grid.setRoomNumber(hall.getRoomNumber());
+        grid.setTotalCapacity(hall.getTotalCapacity());
+        grid.setRows(hall.getNumberOfRows());
+        grid.setColumns(hall.getNumberOfColumns());
+        grid.setExaminationId(exam.getId());
+        grid.setExaminationName(exam.getExaminationName());
+        grid.setSubjectCode(exam.getSubject().getSubjectCode());
+        grid.setSubjectName(exam.getSubject().getSubjectName());
+        grid.setExamDate(exam.getExaminationDate().format(DateTimeFormatter.ISO_LOCAL_DATE));
+        grid.setExamSession(exam.getSession());
+        grid.setAllocatedCount(allocations.size());
 
-        gridDto.setExaminationId(exam.getId());
-        gridDto.setExaminationName(exam.getExaminationName());
-        gridDto.setSubjectName(exam.getSubject().getSubjectName() + " (" + exam.getSubject().getSubjectCode() + ")");
-        gridDto.setExamDate(exam.getExaminationDate().toString());
-        gridDto.setExamTime(exam.getStartTime() + " - " + exam.getEndTime() + " (" + exam.getSession() + ")");
-
-        List<List<HallSeatGridDto.SeatCellDto>> matrix = new ArrayList<>();
+        List<HallSeatGridDto.RowDto> rowDtos = new ArrayList<>();
         int effectiveCap = hall.getEffectiveCapacity();
-        int seatCounter = 0;
+        int runningSeatCount = 0;
 
         for (int r = 1; r <= hall.getNumberOfRows(); r++) {
-            List<HallSeatGridDto.SeatCellDto> rowCells = new ArrayList<>();
-            String rowLetter = getRowLetter(r);
+            HallSeatGridDto.RowDto rowDto = new HallSeatGridDto.RowDto();
+            rowDto.setRowNumber(r);
+            rowDto.setRowLetter(getRowLetter(r));
 
+            List<HallSeatGridDto.SeatCellDto> cells = new ArrayList<>();
             for (int c = 1; c <= hall.getNumberOfColumns(); c++) {
-                seatCounter++;
-                String seatLabel = rowLetter + "-" + String.format("%02d", c);
-                HallSeatGridDto.SeatCellDto cell = new HallSeatGridDto.SeatCellDto(r, c, rowLetter, seatLabel);
+                runningSeatCount++;
+                String cellKey = r + "_" + c;
+                String seatNumber = rowDto.getRowLetter() + "-" + String.format("%02d", c);
 
-                if (seatCounter > effectiveCap) {
-                    cell.setAvailableSeat(false);
-                }
+                HallSeatGridDto.SeatCellDto cell = new HallSeatGridDto.SeatCellDto();
+                cell.setRow(r);
+                cell.setColumn(c);
+                cell.setSeatNumber(seatNumber);
 
-                SeatAllocation alloc = posMap.get(r + "_" + c);
-                if (alloc != null) {
-                    cell.setOccupied(true);
-                    cell.setStudentId(alloc.getStudent().getId());
-                    cell.setRegisterNumber(alloc.getStudent().getRegisterNumber());
-                    cell.setStudentName(alloc.getStudent().getFullName());
-                    cell.setDepartmentCode(alloc.getStudent().getDepartment().getDepartmentCode());
-                    cell.setAttendanceStatus(alloc.getAttendanceStatus());
+                if (runningSeatCount > effectiveCap) {
+                    cell.setStatus("UNAVAILABLE");
+                } else if (seatMap.containsKey(cellKey)) {
+                    SeatAllocation sa = seatMap.get(cellKey);
+                    cell.setStatus("OCCUPIED");
+                    cell.setStudentId(sa.getStudent().getId());
+                    cell.setRegisterNumber(sa.getStudent().getRegisterNumber());
+                    cell.setStudentName(sa.getStudent().getFullName());
+                    cell.setDepartmentCode(sa.getStudent().getDepartment().getDepartmentCode());
+                    cell.setSemester(sa.getStudent().getSemester());
+                    cell.setAttendanceStatus(sa.getAttendanceStatus());
                 } else {
-                    cell.setOccupied(false);
+                    cell.setStatus("EMPTY");
                 }
-
-                rowCells.add(cell);
+                cells.add(cell);
             }
-            matrix.add(rowCells);
+            rowDto.setSeats(cells);
+            rowDtos.add(rowDto);
         }
 
-        gridDto.setGrid(matrix);
-        return gridDto;
+        List<List<HallSeatGridDto.SeatCellDto>> gridList = new ArrayList<>();
+        for (HallSeatGridDto.RowDto r : rowDtos) {
+            gridList.add(r.getSeats());
+        }
+        grid.setGrid(gridList);
+        grid.setGridRows(rowDtos);
+        return grid;
     }
 
     public List<SeatAllocation> getAllocationsForExam(Long examId) {
         return allocationRepository.findByExaminationIdOrderByExaminationHall_HallNameAscRowNumberAscColumnNumberAsc(examId);
     }
 
+    @Transactional
+    public void clearAllocations(Long examId) {
+        allocationRepository.deleteByExaminationId(examId);
+    }
+
+    @Transactional
+    public void updateAttendance(Long allocationId, String status) {
+        SeatAllocation sa = allocationRepository.findById(allocationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Allocation not found with ID: " + allocationId));
+        sa.setAttendanceStatus(status);
+        allocationRepository.save(sa);
+    }
+
     public List<SeatAllocation> getAllocationsForStudent(Long studentId) {
         return allocationRepository.findByStudentId(studentId);
     }
 
-    public List<SeatAllocation> getAllocationsForUsername(String username) {
+    public List<SeatAllocation> getAllocationsForStudentUsername(String username) {
         return allocationRepository.findByStudent_User_UsernameOrderByExamination_ExaminationDateAscExamination_StartTimeAsc(username);
     }
 
-    @Transactional
-    public void updateAttendance(Long allocationId, String attendanceStatus) {
-        SeatAllocation allocation = allocationRepository.findById(allocationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Allocation not found with ID: " + allocationId));
-
-        if ("PRESENT".equalsIgnoreCase(attendanceStatus) || "ABSENT".equalsIgnoreCase(attendanceStatus)) {
-            allocation.setAttendanceStatus(attendanceStatus.toUpperCase());
-        } else {
-            allocation.setAttendanceStatus("PENDING");
+    private String getRowLetter(int rowNumber) {
+        StringBuilder sb = new StringBuilder();
+        int r = rowNumber;
+        while (r > 0) {
+            int rem = (r - 1) % 26;
+            sb.insert(0, (char) ('A' + rem));
+            r = (r - 1) / 26;
         }
-        allocationRepository.save(allocation);
-    }
-
-    /**
-     * Converts a 1-based row number to an alphabetical label (1->A, 2->B, ..., 26->Z, 27->AA...)
-     */
-    public static String getRowLetter(int rowNumber) {
-        StringBuilder result = new StringBuilder();
-        while (rowNumber > 0) {
-            rowNumber--;
-            result.insert(0, (char) ('A' + (rowNumber % 26)));
-            rowNumber /= 26;
-        }
-        return result.toString();
+        return sb.toString();
     }
 }

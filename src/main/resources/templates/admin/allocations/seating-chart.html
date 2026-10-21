@@ -73,7 +73,11 @@
                                          th:title="${cell.isOccupied ? (cell.studentName + ' (' + cell.registerNumber + ')') : (cell.isAvailableSeat ? 'Unallocated Seat' : 'Not Available')}">
                                         <div class="fw-bold" style="font-size: 0.72rem;" th:text="${cell.seatNumber}">A-01</div>
                                         <div th:if="${cell.isOccupied}" class="text-truncate px-1" style="max-width: 64px; font-size: 0.65rem;" th:text="${cell.registerNumber}">2024CSE001</div>
-                                        <div th:if="${cell.isOccupied}" class="badge bg-primary px-1 py-0" style="font-size: 0.58rem;" th:text="${cell.departmentCode}">CSE</div>
+                                        <div th:if="${cell.isOccupied}"
+                                             class="badge px-1 py-0"
+                                             th:classappend="${cell.departmentCode == 'IT' ? 'bg-success' : (cell.departmentCode == 'ECE' ? 'bg-warning text-dark' : 'bg-primary')}"
+                                             style="font-size: 0.58rem;"
+                                             th:text="${cell.departmentCode}">CSE</div>
                                         <div th:if="${!cell.isOccupied and cell.isAvailableSeat}" class="text-muted" style="font-size: 0.62rem;">EMPTY</div>
                                     </div>
                                 </div>

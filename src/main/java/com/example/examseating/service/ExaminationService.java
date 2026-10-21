@@ -3,6 +3,8 @@ package com.example.examseating.service;
 import com.example.examseating.dto.ExaminationDto;
 import com.example.examseating.entity.Department;
 import com.example.examseating.entity.Examination;
+import com.example.examseating.entity.ExaminationRegistration;
+import com.example.examseating.entity.Student;
 import com.example.examseating.entity.Subject;
 import com.example.examseating.exception.ResourceNotFoundException;
 import com.example.examseating.repository.*;
@@ -21,17 +23,20 @@ public class ExaminationService {
     private final SubjectRepository subjectRepository;
     private final ExaminationRegistrationRepository registrationRepository;
     private final SeatAllocationRepository allocationRepository;
+    private final StudentRepository studentRepository;
 
     public ExaminationService(ExaminationRepository examinationRepository,
                               DepartmentRepository departmentRepository,
                               SubjectRepository subjectRepository,
                               ExaminationRegistrationRepository registrationRepository,
-                              SeatAllocationRepository allocationRepository) {
+                              SeatAllocationRepository allocationRepository,
+                              StudentRepository studentRepository) {
         this.examinationRepository = examinationRepository;
         this.departmentRepository = departmentRepository;
         this.subjectRepository = subjectRepository;
         this.registrationRepository = registrationRepository;
         this.allocationRepository = allocationRepository;
+        this.studentRepository = studentRepository;
     }
 
     public List<ExaminationDto> findAll() {
@@ -78,6 +83,20 @@ public class ExaminationService {
         Subject subject = subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + dto.getSubjectId()));
 
+        String session = dto.getSession() != null ? dto.getSession() : "FORENOON";
+
+        // Conflict check: Block scheduling two exams in the same date+session for the same department+semester
+        List<Examination> conflicts = examinationRepository.findConflictingExams(
+                dto.getExaminationDate(), session, dto.getDepartmentId(), dto.getSemester(), null
+        );
+        if (!conflicts.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Scheduling Conflict: Examination '" + conflicts.get(0).getExaminationName() +
+                    "' is already scheduled on " + dto.getExaminationDate() + " (" + session + ") for " +
+                    department.getDepartmentName() + " Semester " + dto.getSemester() + "."
+            );
+        }
+
         Examination exam = new Examination(
                 dto.getExaminationName().trim(),
                 subject,
@@ -87,11 +106,22 @@ public class ExaminationService {
                 dto.getStartTime(),
                 dto.getEndTime(),
                 dto.getAcademicYear().trim(),
-                dto.getSession() != null ? dto.getSession() : "FORENOON"
+                session
         );
         exam.setStatus("SCHEDULED");
 
         Examination saved = examinationRepository.save(exam);
+
+        // Auto-register enrolled active students of that department & semester
+        List<Student> eligibleStudents = studentRepository.findByDepartmentIdAndSemester(department.getId(), dto.getSemester())
+                .stream()
+                .filter(s -> "ACTIVE".equalsIgnoreCase(s.getStatus()))
+                .collect(Collectors.toList());
+
+        for (Student s : eligibleStudents) {
+            registrationRepository.save(new ExaminationRegistration(saved, s));
+        }
+
         return toDto(saved);
     }
 
@@ -106,6 +136,20 @@ public class ExaminationService {
         Subject subject = subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + dto.getSubjectId()));
 
+        String session = dto.getSession() != null ? dto.getSession() : "FORENOON";
+
+        // Conflict check excluding current exam
+        List<Examination> conflicts = examinationRepository.findConflictingExams(
+                dto.getExaminationDate(), session, dto.getDepartmentId(), dto.getSemester(), id
+        );
+        if (!conflicts.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Scheduling Conflict: Examination '" + conflicts.get(0).getExaminationName() +
+                    "' is already scheduled on " + dto.getExaminationDate() + " (" + session + ") for " +
+                    department.getDepartmentName() + " Semester " + dto.getSemester() + "."
+            );
+        }
+
         exam.setExaminationName(dto.getExaminationName().trim());
         exam.setDepartment(department);
         exam.setSubject(subject);
@@ -114,7 +158,7 @@ public class ExaminationService {
         exam.setStartTime(dto.getStartTime());
         exam.setEndTime(dto.getEndTime());
         exam.setAcademicYear(dto.getAcademicYear().trim());
-        exam.setSession(dto.getSession() != null ? dto.getSession() : "FORENOON");
+        exam.setSession(session);
         if (dto.getStatus() != null) {
             exam.setStatus(dto.getStatus());
         }
@@ -169,7 +213,16 @@ public class ExaminationService {
         dto.setAcademicYear(exam.getAcademicYear());
         dto.setSession(exam.getSession());
         dto.setStatus(exam.getStatus());
-        dto.setEligibleStudentCount(registrationRepository.countByExaminationId(exam.getId()));
+
+        long regCount = registrationRepository.countByExaminationId(exam.getId());
+        if (regCount == 0) {
+            // Auto-derived count from enrolled students in that department & semester
+            regCount = studentRepository.countByDepartmentIdAndSemesterAndStatus(
+                    exam.getDepartment().getId(), exam.getSemester(), "ACTIVE"
+            );
+        }
+
+        dto.setEligibleStudentCount(regCount);
         dto.setAllocatedStudentCount(allocationRepository.countByExaminationId(exam.getId()));
         return dto;
     }
