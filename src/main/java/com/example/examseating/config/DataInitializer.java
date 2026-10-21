@@ -330,6 +330,14 @@ public class DataInitializer implements CommandLineRunner {
             }
         });
 
+        // Ensure canonical demo student account password matches the quick-login credentials
+        userRepository.findByUsernameIgnoreCase("2024cse001").ifPresent(u -> {
+            u.setPassword(passwordEncoder.encode("2024cse001"));
+            u.setMustChangePassword(false);
+            u.setActive(true);
+            userRepository.save(u);
+        });
+
         log.info("Data initialization check completed successfully.");
     }
 

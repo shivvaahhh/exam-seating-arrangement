@@ -54,7 +54,7 @@
 
     <div class="p-4">
         <!-- Error / Logout messages (dismissible and properly spaced) -->
-        <div th:if="${errorMessage}" id="loginAlertBox" class="alert alert-danger alert-dismissible fade show login-alert" role="alert">
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show login-alert login-alert-box" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle-fill text-danger me-2 fs-5"></i>
                 <span th:text="${errorMessage}">Invalid credentials</span>
@@ -62,7 +62,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
-        <div th:if="${logoutMessage}" id="loginAlertBox" class="alert alert-success alert-dismissible fade show login-alert" role="alert">
+        <div th:if="${logoutMessage}" class="alert alert-success alert-dismissible fade show login-alert login-alert-box" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill text-success me-2 fs-5"></i>
                 <span th:text="${logoutMessage}">Logged out successfully</span>
@@ -140,8 +140,13 @@
         const form = document.getElementById('loginForm');
         usernameInput.value = username;
         passwordInput.value = password;
+        usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+        usernameInput.dispatchEvent(new Event('change', { bubbles: true }));
+        passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+        passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
         form.submit();
     }
+
     function togglePasswordVisibility() {
         const passwordInput = document.getElementById('password');
         const icon = document.getElementById('passwordToggleIcon');
@@ -158,8 +163,16 @@
 
     // Dismiss alert when user interacts or automatically after 4 seconds
     document.addEventListener("DOMContentLoaded", function() {
-        const alertBox = document.getElementById('loginAlertBox');
-        if (alertBox) {
+        const form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const u = document.getElementById('username');
+                if (u && u.value) u.value = u.value.trim();
+            });
+        }
+
+        const alertBoxes = document.querySelectorAll('.login-alert-box');
+        if (alertBoxes.length > 0) {
             // Clean up URL query parameters so refreshing doesn't keep showing the message
             if (window.history && window.history.replaceState && window.location.search) {
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -167,27 +180,31 @@
 
             // Auto-fade after 4 seconds
             setTimeout(function() {
-                try {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertBox);
-                    if (bsAlert) bsAlert.close();
-                } catch(e) {
-                    alertBox.style.display = 'none';
-                }
+                alertBoxes.forEach(function(box) {
+                    try {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(box);
+                        if (bsAlert) bsAlert.close();
+                    } catch(e) {
+                        box.style.display = 'none';
+                    }
+                });
             }, 4000);
 
             // Close immediately if user starts typing
             const usernameInput = document.getElementById('username');
             const passwordInput = document.getElementById('password');
-            const dismissOnInput = function() {
-                try {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertBox);
-                    if (bsAlert) bsAlert.close();
-                } catch(e) {
-                    alertBox.style.display = 'none';
-                }
+            const dismissAll = function() {
+                alertBoxes.forEach(function(box) {
+                    try {
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(box);
+                        if (bsAlert) bsAlert.close();
+                    } catch(e) {
+                        box.style.display = 'none';
+                    }
+                });
             };
-            if (usernameInput) usernameInput.addEventListener('input', dismissOnInput, { once: true });
-            if (passwordInput) passwordInput.addEventListener('input', dismissOnInput, { once: true });
+            if (usernameInput) usernameInput.addEventListener('input', dismissAll, { once: true });
+            if (passwordInput) passwordInput.addEventListener('input', dismissAll, { once: true });
         }
     });
 </script>

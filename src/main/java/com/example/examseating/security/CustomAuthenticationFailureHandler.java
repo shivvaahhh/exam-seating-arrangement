@@ -5,6 +5,8 @@ import com.example.examseating.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -18,6 +20,7 @@ import java.util.Optional;
 @Component
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
     private final UserRepository userRepository;
 
     public CustomAuthenticationFailureHandler(UserRepository userRepository) {
@@ -29,6 +32,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException, ServletException {
         String username = request.getParameter("username");
+        log.warn("Login failure for username='{}': {} - {}", username, exception.getClass().getSimpleName(), exception.getMessage());
         String errorMessage = "Invalid username or password";
 
         if (username != null && !username.trim().isEmpty()) {
