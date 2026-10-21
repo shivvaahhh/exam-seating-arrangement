@@ -117,7 +117,7 @@ public class StudentService {
                 ? dto.getPassword().trim()
                 : username;
 
-        User user = new User(username, passwordEncoder.encode(rawPassword), email, "ROLE_STUDENT", true);
+        User user = new User(username, passwordEncoder.encode(rawPassword), email, "ROLE_STUDENT", false);
         user = userRepository.save(user);
 
         Student student = new Student();
@@ -201,7 +201,7 @@ public class StudentService {
         }
         String defaultPass = student.getRegisterNumber().toLowerCase();
         student.getUser().setPassword(passwordEncoder.encode(defaultPass));
-        student.getUser().setMustChangePassword(true);
+        student.getUser().setMustChangePassword(false);
         userRepository.save(student.getUser());
         return defaultPass;
     }

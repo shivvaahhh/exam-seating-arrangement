@@ -47,9 +47,9 @@ ON DUPLICATE KEY UPDATE `role`='ROLE_ADMIN';
 
 -- Invigilator Accounts (must_change_password = 1)
 INSERT INTO `users` (`user_id`, `username`, `password_hash`, `email`, `role`, `active`, `must_change_password`, `created_at`, `updated_at`) VALUES
-(2, 'ramesh.sharma@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'ramesh.sharma@college.edu', 'ROLE_INVIGILATOR', 1, 1, NOW(), NOW()),
-(3, 'priya.sundaram@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'priya.sundaram@college.edu', 'ROLE_INVIGILATOR', 1, 1, NOW(), NOW()),
-(4, 'anand.kumar@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'anand.kumar@college.edu', 'ROLE_INVIGILATOR', 1, 1, NOW(), NOW())
+(2, 'ramesh.sharma@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'ramesh.sharma@college.edu', 'ROLE_INVIGILATOR', 1, 0, NOW(), NOW()),
+(3, 'priya.sundaram@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'priya.sundaram@college.edu', 'ROLE_INVIGILATOR', 1, 0, NOW(), NOW()),
+(4, 'anand.kumar@college.edu', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', 'anand.kumar@college.edu', 'ROLE_INVIGILATOR', 1, 0, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `role`='ROLE_INVIGILATOR';
 
 -- 5. Invigilators Table
@@ -62,32 +62,32 @@ ON DUPLICATE KEY UPDATE `name`=VALUES(`name`);
 -- 6. Students & Student User Accounts (15 CSE + 10 IT = 25 Students)
 -- CSE Students (2024CSE001 to 2024CSE015)
 INSERT INTO `users` (`user_id`, `username`, `password_hash`, `email`, `role`, `active`, `must_change_password`, `created_at`, `updated_at`) VALUES
-(101, '2024cse001', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse001@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(102, '2024cse002', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse002@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(103, '2024cse003', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse003@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(104, '2024cse004', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse004@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(105, '2024cse005', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse005@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(106, '2024cse006', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse006@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(107, '2024cse007', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse007@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(108, '2024cse008', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse008@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(109, '2024cse009', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse009@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(110, '2024cse010', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse010@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(111, '2024cse011', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse011@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(112, '2024cse012', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse012@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(113, '2024cse013', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse013@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(114, '2024cse014', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse014@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(115, '2024cse015', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse015@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
+(101, '2024cse001', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse001@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(102, '2024cse002', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse002@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(103, '2024cse003', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse003@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(104, '2024cse004', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse004@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(105, '2024cse005', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse005@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(106, '2024cse006', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse006@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(107, '2024cse007', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse007@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(108, '2024cse008', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse008@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(109, '2024cse009', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse009@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(110, '2024cse010', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse010@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(111, '2024cse011', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse011@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(112, '2024cse012', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse012@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(113, '2024cse013', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse013@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(114, '2024cse014', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse014@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(115, '2024cse015', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024cse015@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
 -- IT Students (2024IT001 to 2024IT010)
-(116, '2024it001', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it001@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(117, '2024it002', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it002@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(118, '2024it003', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it003@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(119, '2024it004', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it004@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(120, '2024it005', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it005@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(121, '2024it006', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it006@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(122, '2024it007', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it007@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(123, '2024it008', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it008@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(124, '2024it009', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it009@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW()),
-(125, '2024it010', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it010@college.edu', 'ROLE_STUDENT', 1, 1, NOW(), NOW())
+(116, '2024it001', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it001@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(117, '2024it002', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it002@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(118, '2024it003', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it003@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(119, '2024it004', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it004@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(120, '2024it005', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it005@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(121, '2024it006', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it006@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(122, '2024it007', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it007@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(123, '2024it008', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it008@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(124, '2024it009', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it009@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW()),
+(125, '2024it010', '$2a$10$7vj/H0Y2F3w.WwW0MhV9beKk1y9nN5l7wA31x3a8G5b6F2v4k1a2a', '2024it010@college.edu', 'ROLE_STUDENT', 1, 0, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `email`=VALUES(`email`);
 
 INSERT INTO `students` (`id`, `register_number`, `full_name`, `email`, `phone_number`, `semester`, `academic_year`, `status`, `department_id`, `user_id`, `created_at`, `updated_at`) VALUES

@@ -149,7 +149,7 @@ public class DataInitializer implements CommandLineRunner {
                 String email = reg.toLowerCase() + "@college.edu";
                 String username = reg.toLowerCase();
 
-                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", true);
+                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", false);
                 user = userRepository.save(user);
 
                 Student s = new Student();
@@ -172,7 +172,7 @@ public class DataInitializer implements CommandLineRunner {
                 String email = reg.toLowerCase() + "@college.edu";
                 String username = reg.toLowerCase();
 
-                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", true);
+                User user = new User(username, passwordEncoder.encode(username), email, "ROLE_STUDENT", false);
                 user = userRepository.save(user);
 
                 Student s = new Student();
@@ -195,21 +195,21 @@ public class DataInitializer implements CommandLineRunner {
         Invigilator inv1 = null, inv2 = null;
         if (invigilatorRepository.count() == 0 && cse != null && it != null && ece != null) {
             // Invigilator 1
-            User u1 = new User("ramesh.sharma@college.edu", passwordEncoder.encode("invigilator123"), "ramesh.sharma@college.edu", "ROLE_INVIGILATOR", true);
+            User u1 = new User("ramesh.sharma@college.edu", passwordEncoder.encode("invigilator123"), "ramesh.sharma@college.edu", "ROLE_INVIGILATOR", false);
             u1 = userRepository.save(u1);
             inv1 = new Invigilator("INV-001", "Dr. Ramesh Sharma", "ramesh.sharma@college.edu", "9876543201", cse);
             inv1.setUser(u1);
             inv1 = invigilatorRepository.save(inv1);
 
             // Invigilator 2
-            User u2 = new User("priya.patel@college.edu", passwordEncoder.encode("invigilator123"), "priya.patel@college.edu", "ROLE_INVIGILATOR", true);
+            User u2 = new User("priya.patel@college.edu", passwordEncoder.encode("invigilator123"), "priya.patel@college.edu", "ROLE_INVIGILATOR", false);
             u2 = userRepository.save(u2);
             inv2 = new Invigilator("INV-002", "Prof. Priya Patel", "priya.patel@college.edu", "9876543202", it);
             inv2.setUser(u2);
             inv2 = invigilatorRepository.save(inv2);
 
             // Invigilator 3
-            User u3 = new User("anand.reddy@college.edu", passwordEncoder.encode("invigilator123"), "anand.reddy@college.edu", "ROLE_INVIGILATOR", true);
+            User u3 = new User("anand.reddy@college.edu", passwordEncoder.encode("invigilator123"), "anand.reddy@college.edu", "ROLE_INVIGILATOR", false);
             u3 = userRepository.save(u3);
             Invigilator inv3 = new Invigilator("INV-003", "Dr. Anand Reddy", "anand.reddy@college.edu", "9876543203", ece);
             inv3.setUser(u3);
@@ -316,6 +316,14 @@ public class DataInitializer implements CommandLineRunner {
                 }
             }
         }
+
+        // Ensure all existing user accounts have mustChangePassword=false
+        userRepository.findAll().forEach(u -> {
+            if (u.isMustChangePassword()) {
+                u.setMustChangePassword(false);
+                userRepository.save(u);
+            }
+        });
 
         log.info("Data initialization check completed successfully.");
     }

@@ -45,10 +45,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             });
         }
 
-        if (mustChangePassword) {
-            response.sendRedirect(request.getContextPath() + "/change-password");
-            return;
-        }
 
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             if ("ROLE_ADMIN".equals(authority.getAuthority())) {

@@ -93,7 +93,7 @@ public class InvigilatorService {
         }
 
         String generatedPass = generateRandomPassword();
-        User user = new User(username, passwordEncoder.encode(generatedPass), email, "ROLE_INVIGILATOR", true);
+        User user = new User(username, passwordEncoder.encode(generatedPass), email, "ROLE_INVIGILATOR", false);
         user = userRepository.save(user);
 
         Invigilator invigilator = new Invigilator(
@@ -168,7 +168,7 @@ public class InvigilatorService {
 
         String newPassword = generateRandomPassword();
         inv.getUser().setPassword(passwordEncoder.encode(newPassword));
-        inv.getUser().setMustChangePassword(true);
+        inv.getUser().setMustChangePassword(false);
         userRepository.save(inv.getUser());
         return newPassword;
     }
